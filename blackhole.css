@@ -1,0 +1,190 @@
+/* blackhole 模块样式(由 blackhole.js 自动注入或手动引入)
+   层级约定:canvas 9998 / 坠落元素 9999 / 按钮与 HUD 10000 */
+
+.bh-canvas {
+  position: fixed;
+  inset: 0 auto auto 0;
+  /* 宽高由 renderer.resize() 以 innerWidth/innerHeight 内联设置:
+     移动端 100vh(大视口)≠ innerHeight(当前视口),会拉伸位图并使黑洞与物理错位 */
+  z-index: 9998;
+  pointer-events: none;
+}
+
+/* 可吞元素:激活态描边提示
+   touch-action 用 pan-y:触屏上仍可纵向滚动页面;开始拖拽后由 .bh-dragging 全面接管 */
+.bh-devour {
+  cursor: grab;
+  outline: 1px dashed rgba(150, 170, 255, 0.45);
+  outline-offset: 3px;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* 拖拽/坠落中的 transform/filter 由物理逐帧驱动,
+   必须屏蔽宿主页面在这些属性上的 CSS transition(否则轨迹被缓动劫持) */
+.bh-dragging,
+.bh-falling {
+  transition: none !important;
+}
+
+.bh-dragging {
+  cursor: grabbing !important;
+  outline-color: rgba(255, 190, 120, 0.8);
+  box-shadow: 0 0 24px rgba(255, 160, 80, 0.25);
+  touch-action: none;
+}
+
+.bh-falling {
+  pointer-events: none;
+  outline: none;
+}
+
+/* 占位符:吞噬后折叠,让页面内容"逐渐消失"
+   宽度/flex-basis 一并折叠,横向 flex(技能胶囊)与网格里也有渐隐效果 */
+.bh-ghost {
+  visibility: hidden;
+  /* 折叠放缓:回流位移平滑,用户瞄准中的目标是"滑走"而非"跳走" */
+  transition: height 0.9s ease, width 0.9s ease, margin 0.9s ease,
+    padding 0.9s ease, flex-basis 0.9s ease;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.bh-ghost-collapse {
+  height: 0 !important;
+  width: 0 !important;
+  flex-basis: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* 启动按钮(具体角落由 hud.js 按 corner 配置内联设置)*/
+.bh-btn {
+  position: fixed;
+  z-index: 10000;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1px solid rgba(160, 175, 255, 0.35);
+  background: radial-gradient(circle at 35% 30%, #1a2038, #05060d 70%);
+  color: #e8ecff;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 18px rgba(80, 100, 255, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+.bh-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 2px 26px rgba(255, 150, 60, 0.45);
+}
+
+.bh-btn-on {
+  border-color: rgba(255, 180, 100, 0.7);
+  box-shadow: 0 0 30px rgba(255, 150, 60, 0.55);
+}
+
+/* HUD 面板(放在黑洞水平对侧,位置由 hud.js 内联设置)*/
+.bh-hud {
+  position: fixed;
+  z-index: 10000;
+  min-width: 210px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(140, 160, 255, 0.25);
+  background: rgba(8, 10, 22, 0.82);
+  backdrop-filter: blur(6px);
+  color: #cfd8ff;
+  font: 12px/1.7 ui-monospace, SFMono-Regular, Menlo, monospace;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+}
+
+.bh-hud-show {
+  opacity: 1;
+  transform: none;
+}
+
+.bh-hud-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.bh-hud-row i {
+  font-style: normal;
+  opacity: 0.55;
+  font-size: 10px;
+}
+
+.bh-hud-row b {
+  color: #ffcf9a;
+  font-weight: 600;
+}
+
+.bh-bar {
+  margin-top: 8px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(140, 160, 255, 0.15);
+  overflow: hidden;
+}
+
+.bh-bar-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #ff7a2f, #ffd9a0);
+  transition: width 0.4s ease;
+}
+
+.bh-hud-msg {
+  margin-top: 6px;
+  color: #ffb27a;
+  min-height: 1em;
+}
+
+/* 控制排:倍速与恢复(HUD 面板整体 pointer-events:none,按钮单独放行)*/
+.bh-hud-ctrl {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.bh-hud-ctrl button {
+  pointer-events: auto;
+  padding: 3px 9px;
+  font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: #cfd8ff;
+  background: rgba(140, 160, 255, 0.08);
+  border: 1px solid rgba(140, 160, 255, 0.25);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.bh-hud-ctrl button:hover {
+  border-color: rgba(255, 190, 120, 0.6);
+}
+
+.bh-speed-on {
+  color: #ffcf9a !important;
+  border-color: rgba(255, 190, 120, 0.7) !important;
+  background: rgba(255, 160, 80, 0.12) !important;
+}
+
+.bh-restore {
+  margin-left: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bh-btn,
+  .bh-hud,
+  .bh-ghost {
+    transition: none;
+  }
+}

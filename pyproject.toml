@@ -1,0 +1,6 @@
+[project]
+name = "blackhole-js"
+version = "0.1.0"
+description = "Local preview harness for the blackhole.js static site. The site itself is zero-dependency HTML/JS/CSS and needs no Python in production; this project exists only so `uv run` can serve the folder during development on a pinned interpreter."
+requires-python = ">=3.14"
+dependencies = []

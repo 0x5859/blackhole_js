@@ -1,0 +1,9 @@
+.DS_Store
+
+# uv-managed local preview environment (dev-only; the site itself needs no Python)
+.venv/
+__pycache__/
+
+# Claude Code tooling & AI-workflow artifacts (not part of the published project)
+.claude/
+docs/superpowers/

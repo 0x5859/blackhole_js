@@ -1,0 +1,2127 @@
+<!DOCTYPE html>
+<html lang="en" data-bh-lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A black hole swallows your html page</title>
+<meta name="description" content="A playable physics explainer: fifteen equations of general relativity power the black hole in the corner. Press 🕳 and feed it the very paragraphs that explain it. EN / 中文.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16/dist/contrib/auto-render.min.js"></script>
+<script>
+/* Apply stored language before first paint (default: en). */
+(function () {
+  try {
+    if (localStorage.getItem('bh-lang') === 'zh') {
+      document.documentElement.setAttribute('data-bh-lang', 'zh');
+      document.documentElement.setAttribute('lang', 'zh-CN');
+    }
+  } catch (e) { /* storage unavailable: stay in English */ }
+})();
+</script>
+<style>
+:root {
+  --bg: #0b0e17;
+  --panel: rgba(16, 21, 36, 0.6);
+  --ink: #dbe2f4;
+  --ink-dim: #8b96b5;
+  --ink-faint: #5a6480;
+  --accent: #7fb0ff;
+  --accent-warm: #ffb26b;
+  --line: #1d2438;
+  --line-bright: #2e3a5e;
+  --radius: 12px;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+}
+* { box-sizing: border-box; }
+html { color-scheme: dark; scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 1.75;
+  color: var(--ink);
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(1100px 600px at 82% -10%, rgba(84, 110, 190, 0.14), transparent 65%),
+    radial-gradient(900px 700px at -10% 105%, rgba(160, 92, 60, 0.10), transparent 60%),
+    radial-gradient(1.2px 1.2px at 18% 22%, rgba(210, 220, 245, 0.5), transparent 100%),
+    radial-gradient(1px 1px at 63% 12%, rgba(210, 220, 245, 0.4), transparent 100%),
+    radial-gradient(1.4px 1.4px at 87% 42%, rgba(210, 220, 245, 0.35), transparent 100%),
+    radial-gradient(1px 1px at 34% 68%, rgba(210, 220, 245, 0.3), transparent 100%),
+    radial-gradient(1.2px 1.2px at 9% 55%, rgba(210, 220, 245, 0.35), transparent 100%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+::selection { background: rgba(127, 176, 255, 0.28); }
+a { color: var(--accent); text-decoration: none; }
+a:hover, a:focus-visible { text-decoration: underline; text-underline-offset: 3px; }
+
+/* ---- bilingual switching ---- */
+[data-bh-lang="en"] [data-lang="zh"] { display: none !important; }
+[data-bh-lang="zh"] [data-lang="en"] { display: none !important; }
+
+.lang-toggle {
+  position: fixed; top: 18px; right: 20px; z-index: 8999;
+  padding: 6px 15px; border-radius: 999px;
+  font-family: var(--font-sans); font-size: 0.84rem; letter-spacing: 0.05em;
+  color: var(--accent); background: rgba(11, 14, 23, 0.72);
+  border: 1px solid var(--line-bright); cursor: pointer;
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  transition: color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.lang-toggle:hover, .lang-toggle:focus-visible {
+  color: #b8d2ff; border-color: var(--accent);
+  box-shadow: 0 0 18px rgba(127, 176, 255, 0.18);
+}
+
+.page { max-width: 800px; margin: 0 auto; padding: 84px 26px 60px; }
+
+.hero { padding-bottom: 36px; border-bottom: 1px solid var(--line); margin-bottom: 32px; }
+.kicker {
+  font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.24em;
+  text-transform: uppercase; color: var(--accent-warm); margin: 0 0 14px;
+}
+h1 {
+  margin: 0 0 18px; font-size: clamp(1.9rem, 5vw, 2.8rem); font-weight: 700;
+  line-height: 1.18; letter-spacing: 0.005em; color: #f0f4ff;
+}
+.standfirst { font-size: 1.08rem; color: var(--ink-dim); max-width: 64ch; margin: 0; }
+
+.hint-chip {
+  display: flex; align-items: flex-start; gap: 12px;
+  margin: 0 0 40px; padding: 13px 18px;
+  border: 1px solid rgba(255, 178, 107, 0.4); border-radius: 10px;
+  background: rgba(255, 178, 107, 0.06);
+  font-size: 0.92rem; line-height: 1.65; color: var(--ink-dim);
+}
+.hint-chip .chip-icon { flex: none; font-size: 1.1rem; line-height: 1.5; }
+.hint-chip p { margin: 0; }
+.hint-chip b { color: var(--accent-warm); font-weight: 600; }
+
+h2 { font-size: 1.32rem; font-weight: 650; color: #eef2ff; line-height: 1.3; margin: 0 0 14px; }
+.eq { margin: 0 0 70px; scroll-margin-top: 90px; }
+.eq-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 2em; height: 2em; padding: 0 0.35em; margin-right: 12px;
+  border: 1px solid var(--line-bright); border-radius: 8px;
+  font-family: var(--font-mono); font-size: 0.72em; color: var(--accent);
+  vertical-align: 0.18em; background: rgba(127, 176, 255, 0.06);
+}
+.eq p { margin: 0 0 1em; }
+.katex-display { overflow-x: auto; overflow-y: hidden; padding: 10px 2px; margin: 0.6em 0 1.1em; }
+.katex { font-size: 1.06em; }
+
+.code-box {
+  margin: 1.4em 0; padding: 15px 20px 16px; border: 1px solid var(--line);
+  border-left: 3px solid var(--accent); border-radius: 8px; background: var(--panel);
+  font-size: 0.93rem; line-height: 1.7;
+}
+.code-box .box-title {
+  display: block; font-family: var(--font-mono); font-size: 0.72rem;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px;
+}
+.code-box p { margin: 0 0 0.6em; }
+.code-box p:last-child { margin-bottom: 0; }
+code {
+  font-family: var(--font-mono); font-size: 0.86em; color: #ffcf9a;
+  background: rgba(127, 176, 255, 0.08); border: 1px solid rgba(127, 176, 255, 0.12);
+  padding: 1px 6px; border-radius: 5px; white-space: nowrap;
+}
+.see { margin: 1.2em 0 0; padding-left: 20px; position: relative; color: var(--ink-dim); font-size: 0.97rem; }
+.see::before { content: "✦"; position: absolute; left: 0; top: 0; color: var(--accent-warm); }
+.see b { color: var(--accent-warm); font-weight: 600; }
+
+.aside-box {
+  margin: 0 0 44px; padding: 18px 22px; border: 1px solid var(--line);
+  border-radius: var(--radius); background: var(--panel); font-size: 0.95rem;
+}
+.aside-box .box-title {
+  display: block; font-family: var(--font-mono); font-size: 0.72rem;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 8px;
+}
+.aside-box p { margin: 0 0 0.7em; }
+.aside-box p:last-child { margin-bottom: 0; }
+
+.toc { margin: 0 0 44px; padding: 20px 24px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+.toc .box-title {
+  display: block; font-family: var(--font-mono); font-size: 0.72rem;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 10px;
+}
+.toc ol { margin: 0; padding: 0 0 0 1.6em; columns: 2; column-gap: 34px; font-size: 0.92rem; }
+.toc li { margin: 0 0 6px; break-inside: avoid; color: var(--ink-faint); }
+.toc a { color: var(--ink-dim); }
+.toc a:hover { color: var(--accent); }
+.toc .toc-extra { list-style: none; margin-left: -1.6em; padding-top: 4px; }
+.toc .toc-extra a { color: var(--accent-warm); }
+@media (max-width: 640px) { .toc ol { columns: 1; } }
+
+.honesty {
+  margin: 0 0 64px; padding: 24px 28px; scroll-margin-top: 90px;
+  border: 1px dashed rgba(255, 178, 107, 0.55); border-radius: var(--radius);
+  background: rgba(255, 178, 107, 0.05);
+}
+.honesty h2 { color: var(--accent-warm); font-size: 1.2rem; margin-bottom: 10px; }
+.honesty .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 30px; }
+@media (max-width: 680px) { .honesty .cols { grid-template-columns: 1fr; } }
+.honesty h3 {
+  font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.16em;
+  text-transform: uppercase; margin: 12px 0 8px;
+}
+.honesty .real h3 { color: var(--accent); }
+.honesty .fake h3 { color: var(--accent-warm); }
+.honesty ul { margin: 0; padding-left: 1.2em; font-size: 0.9rem; line-height: 1.65; color: var(--ink-dim); }
+.honesty li { margin-bottom: 7px; }
+.honesty p { font-size: 0.95rem; color: var(--ink); margin: 0 0 14px; }
+
+.fig { margin: 1.8em 0 0.4em; padding: 18px 18px 14px; border: 1px solid var(--line); border-radius: var(--radius); background: rgba(13, 17, 29, 0.72); }
+.fig canvas { display: block; width: 100%; height: 360px; }
+.fig-controls {
+  display: flex; align-items: center; gap: 14px; margin-top: 12px;
+  font-family: var(--font-mono); font-size: 0.82rem; color: var(--ink-dim);
+}
+.fig-controls input[type="range"] { flex: 1; accent-color: var(--accent); min-width: 100px; }
+.fig-controls .readout { color: var(--accent-warm); min-width: 15ch; }
+.fig figcaption { margin-top: 12px; font-size: 0.85rem; line-height: 1.65; color: var(--ink-faint); }
+
+.site-footer { margin-top: 70px; padding-top: 26px; border-top: 1px solid var(--line); font-size: 0.85rem; color: var(--ink-faint); }
+.site-footer p { margin: 0 0 8px; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .lang-toggle { transition: none; }
+}
+</style>
+</head>
+<body>
+
+<button class="lang-toggle" id="lang-toggle" type="button">中文</button>
+
+<div class="page">
+
+<header class="hero">
+  <div class="blk" data-devour>
+    <p class="kicker">
+      <span data-lang="en">blackhole.js</span><span data-lang="zh">blackhole.js</span>
+    </p>
+    <h1>
+      <span data-lang="en">A black hole swallows your html page</span><span data-lang="zh">一个吞噬你 HTML 页面的黑洞</span>
+    </h1>
+    <p class="standfirst" data-lang="en">
+      A black-hole component in JavaScript. Add it to your HTML page, and it eats your content.
+    </p>
+    <p class="standfirst" data-lang="zh">
+      一个js实现的黑洞组件,可以加入你的html页面,吃掉你的内容。
+    </p>
+  </div>
+</header>
+
+<div class="hint-chip" role="note">
+  <span class="chip-icon" aria-hidden="true">🕳</span>
+  <p data-lang="en">
+    The black hole is already live (bottom right). Grab anything (this sentence,
+    an equation, the whole table of contents) and throw it in.
+    <b>1&times;/2&times;/3&times;</b> speed and <b>&#8635; Restore</b> live in the HUD;
+    <b>🕳</b> toggles the hole off.
+  </p>
+  <p data-lang="zh">
+    黑洞已经在线(右下角)。抓起任何东西(这句话、一条方程、甚至整张目录),把它甩进去。
+    倍速 <b>1&times;/2&times;/3&times;</b> 和 <b>&#8635; 复原</b> 都在 HUD 里;<b>🕳</b> 可随时关闭黑洞。
+  </p>
+</div>
+
+<main>
+
+<div class="blk" data-devour>
+  <p data-lang="en">
+    The page you are reading looks like an ordinary physics explainer: fifteen equations,
+    two figures, a table of contents. It also hosts a black hole, already live in the
+    corner. Grab any block of content (this very paragraph will do) and
+    throw it. It will arc into orbit, precess, spiral inward, stretch into spaghetti, blush
+    red, dim, and freeze just above a perfectly black disk. Then it vanishes. At that
+    moment the disk grows, rings like a struck bell, and flares with the light of its meal.
+  </p>
+  <p data-lang="zh">
+    你正在读的这个页面,看上去是一篇普通的物理科普:十五条方程、两张图、一份目录。但它还养着一个黑洞,此刻就在角落里运行着。
+    抓起任何一块内容(就拿你正在读的这一段试试),甩出去。
+    它会划一道弧线进入轨道,近日点进动,盘旋着向内坠落,被拉成面条,泛红、变暗,
+    最后冻结在一个纯黑圆盘上方一线之处。然后它消失。就在那一刻,圆盘长大一圈,
+    像被敲响的钟一样震荡,并为这顿晚餐迸出一次耀发。
+  </p>
+</div>
+
+<div class="blk" data-devour>
+  <p data-lang="en">
+    None of that is keyframed animation. Every frame, the browser numerically integrates the
+    geodesic equations of the Schwarzschild metric, the exact solution of
+    Einstein&rsquo;s field equations for the spacetime outside every non-rotating
+    black hole in the universe. The block you threw plays the role of not one
+    test particle but a whole mesh of them, one geodesic per vertex. The screen is treated
+    as the black hole&rsquo;s equatorial plane for everything you throw. The hole itself is
+    rendered by tracing a light ray backward through the exact geometry for every pixel,
+    with the disk tilted at 77&deg; like the iconic renderings. Your mouse throw sets the conserved
+    energy and angular momentum. General relativity does the rest.
+  </p>
+  <p data-lang="zh">
+    这一切都不是关键帧动画。每一帧,浏览器都在数值积分史瓦西度规的测地线方程。
+    它正是爱因斯坦场方程的那个精确解,描述宇宙中每一个不旋转黑洞外部的时空。
+    你甩出去的那块内容,扮演的不是一颗试验粒子,而是一整张试验粒子网格:每个顶点一条测地线。
+    对你抛出的所有东西,屏幕被当作黑洞的赤道面;黑洞本身则是逐像素向后追踪光线、
+    穿过精确几何渲染出来的,吸积盘倾斜 77°,正如那些标志性的模拟图像。
+    你甩鼠标的那一下,定下了守恒的能量与角动量。剩下的,交给广义相对论。
+  </p>
+</div>
+
+<div class="blk" data-devour>
+  <p data-lang="en">
+    The rest of this page is the lab notebook, and every entry in it is edible. It
+    walks through all fifteen equations the demo uses, in the order they act on a doomed
+    paragraph: the stage (the metric), the fall (geodesics and frozen time), the look of the
+    fall (redshift and tides), the aftermath (horizon growth, ringdown, flares), and the
+    permanent scenery (lensing, the photon ring, the accretion disk). Each section ends with
+    where the equation lives in the source, using the real function names, and what it makes
+    happen on screen.
+  </p>
+  <p data-lang="zh">
+    页面剩下的部分是实验记录本,而且每一条记录都可以吃。它按方程作用在一段注定毁灭的文字上的顺序,
+    讲完演示用到的全部十五条方程:舞台(度规)、坠落(测地线与冻结的时间)、坠落的样子(红移与潮汐)、
+    余波(视界生长、铃宕、耀发),以及永久的布景(引力透镜、光子环、吸积盘)。
+    每一节的结尾都会告诉你:这条方程住在源码的哪个函数里(用真实的函数名),
+    以及它让屏幕上发生了什么。
+  </p>
+</div>
+
+<aside class="aside-box" id="units" data-devour>
+  <span class="box-title"><span data-lang="en">One weird unit system</span><span data-lang="zh">一套怪单位制</span></span>
+  <p data-lang="en">
+    The code works in <em>geometric units</em>: \( G = c = 1 \), and the unit of length is
+    the CSS pixel. Mass is then also a length: a black hole of mass \( M \) (in
+    pixels) has horizon radius \( r_s = 2M \). The demo starts at \( r_s = 16\,\mathrm{px} \),
+    so \( M = 8\,\mathrm{px} \).
+  </p>
+  <p data-lang="zh">
+    代码使用<em>几何单位制</em>:\( G = c = 1 \),长度单位是 CSS 像素。于是质量也是一种长度:
+    质量为 \( M \)(像素)的黑洞,视界半径 \( r_s = 2M \)。演示从 \( r_s = 16\,\mathrm{px} \)
+    开始,即 \( M = 8\,\mathrm{px} \)。
+  </p>
+  <p data-lang="en">
+    One real-world knob connects pixel-land to your wall clock: the speed of light is
+    declared to be <code>cPx = 1600</code> pixels per second (configurable). Each animation
+    frame of \( \Delta t_{\mathrm{real}} \) seconds becomes a coordinate-time budget of
+    \( \Delta t = c_{\mathrm{px}} \, \Delta t_{\mathrm{real}} \) pixels. On this page light
+    crosses your viewport in about a second, which makes a 16-pixel black hole roughly as
+    relativistic as the real thing. Take the HUD&rsquo;s later 1&nbsp;px&nbsp;=&nbsp;Planck-length
+      wink literally, and it is also some 10<sup>38</sup> times lighter than a stellar black hole. One quirk to
+    keep in mind: screen \( y \) points <em>down</em>, so the angle
+    \( \varphi = \operatorname{atan2}(dy, dx) \) winds clockwise. The physics does not care.
+  </p>
+  <p data-lang="zh">
+    只有一个旋钮把像素世界接到你的挂钟上:光速被规定为 <code>cPx = 1600</code> 像素/秒(可配置)。
+    每一帧 \( \Delta t_{\mathrm{real}} \) 秒的动画,折算成
+    \( \Delta t = c_{\mathrm{px}} \, \Delta t_{\mathrm{real}} \) 像素的坐标时预算。
+    在这个页面上,光穿过你的视口大约要一秒。这让一个 16 像素的黑洞在"相对论程度"上
+    与真家伙不相上下。若认真对待 HUD 后面那句 1&nbsp;px&nbsp;=&nbsp;普朗克长度 的玩笑,它还比一颗恒星级黑洞轻上约 10<sup>38</sup> 倍。还有个小怪癖要记住:屏幕的 \( y \)
+    轴朝<em>下</em>,所以角度 \( \varphi = \operatorname{atan2}(dy, dx) \) 沿顺时针增长。
+    物理不在乎。
+  </p>
+</aside>
+
+<nav class="toc" aria-label="Table of contents" data-devour>
+  <span class="box-title"><span data-lang="en">The fifteen equations</span><span data-lang="zh">十五条方程</span></span>
+  <ol>
+    <li><a href="#eq1"><span data-lang="en">The Schwarzschild metric</span><span data-lang="zh">史瓦西度规</span></a></li>
+    <li><a href="#eq2"><span data-lang="en">Geodesics: the fall itself</span><span data-lang="zh">测地线:坠落本身</span></a></li>
+    <li><a href="#eq3"><span data-lang="en">Coordinate time &amp; the frozen fall</span><span data-lang="zh">坐标时与冻结的坠落</span></a></li>
+    <li><a href="#eq4"><span data-lang="en">A mouse throw becomes a four-velocity</span><span data-lang="zh">甩鼠标变成四速度</span></a></li>
+    <li><a href="#eq5"><span data-lang="en">Gravitational redshift</span><span data-lang="zh">引力红移</span></a></li>
+    <li><a href="#eq6"><span data-lang="en">Tidal stretching (spaghettification)</span><span data-lang="zh">潮汐拉伸(面条化)</span></a></li>
+    <li><a href="#eq7"><span data-lang="en">The horizon grows</span><span data-lang="zh">视界在长大</span></a></li>
+    <li><a href="#eq8"><span data-lang="en">Ringdown: the bell of spacetime</span><span data-lang="zh">铃宕:时空之钟</span></a></li>
+    <li><a href="#eq9"><span data-lang="en">Bending light</span><span data-lang="zh">光线弯折</span></a></li>
+    <li><a href="#eq10"><span data-lang="en">The photon sphere &amp; the shadow</span><span data-lang="zh">光子球与黑影</span></a></li>
+    <li><a href="#eq11"><span data-lang="en">The accretion disk</span><span data-lang="zh">吸积盘</span></a></li>
+    <li><a href="#eq12"><span data-lang="en">Accretion flares</span><span data-lang="zh">吸积耀发</span></a></li>
+    <li><a href="#eq13"><span data-lang="en">The cost of hovering</span><span data-lang="zh">悬停的代价</span></a></li>
+    <li><a href="#eq14"><span data-lang="en">Radiation drag (the gameplay term)</span><span data-lang="zh">辐射阻尼(游戏项)</span></a></li>
+    <li><a href="#eq15"><span data-lang="en">Black hole entropy</span><span data-lang="zh">黑洞的熵</span></a></li>
+    <li class="toc-extra"><a href="#honesty"><span data-lang="en">The honesty box</span><span data-lang="zh">诚实清单</span></a></li>
+  </ol>
+</nav>
+
+<section class="honesty" id="honesty" aria-labelledby="honesty-title">
+  <div class="blk" data-devour>
+    <h2 id="honesty-title"><span data-lang="en">The honesty box</span><span data-lang="zh">诚实清单</span></h2>
+    <p data-lang="en">
+      A demo like this earns trust only if it is explicit about where the physics is exact and
+      where it cheats for the sake of a 60&nbsp;fps web page. Here is the full ledger.
+    </p>
+    <p data-lang="zh">
+      这样的演示要赢得信任,就必须讲清楚:哪里的物理是精确的,哪里为了一张 60&nbsp;fps
+      的网页而作了弊。下面是完整的账本。
+    </p>
+  </div>
+  <div class="cols">
+    <div class="real" data-devour>
+      <h3><span data-lang="en">Exact GR (in pixel units)</span><span data-lang="zh">精确广相(像素单位)</span></h3>
+      <ul data-lang="en">
+        <li>Equatorial Schwarzschild geodesics: <code>accel()</code> is the exact radial
+            equation, integrated by step-doubling adaptive RK4 with stored conserved
+            \( E, L \) and a constraint projection each step; energy drift
+            &lt;&nbsp;10<sup>&minus;9</sup> over 5&times;10<sup>4</sup> steps in the unit
+            tests.</li>
+        <li>The coordinate-time step \( d\tau = f\,\Delta t / E \): the freeze at the
+            horizon is the real effect, not an easing curve.</li>
+        <li>Redshift factor \( \sqrt{f} \) and the static-observer hover acceleration
+            \( M / (r^2 \sqrt{f}) \) in <code>hoverAccel()</code>.</li>
+        <li>Photon trajectories: near the hole the shader integrates the exact null geodesic
+            per pixel (Binet \( u'' + u = 3Mu^2 \) in vector form); far from it, pixels take
+            the weak-field shortcut of equation 9. Lensing, the shadow, and the
+            photon ring all <em>emerge</em> from the integration:
+            \( b_c = (3\sqrt{3}/2)\,r_s \) is measured off the screen, not painted
+            (<code>bCrit()</code> survives as the theory value and the 2D fallback).</li>
+        <li>The disk&rsquo;s brightness asymmetry: the circular-orbit
+            \( g = \sqrt{1-3M/r}\,/\,(1-\beta\mu) \) (gravitational redshift plus
+            Doppler), with observed brightness \( \propto g^3 \) in
+            <code>diskEmission()</code>.</li>
+        <li>Tidal warping of falling elements: every vertex of the released mesh rides its
+            own geodesic, so spaghettification is emergent geodesic deviation, not a
+            painted transform.</li>
+        <li>ISCO at \( 3\,r_s \) (<code>isco()</code>) and the Keplerian
+            \( \Omega = \sqrt{M/r^3} \): exact in Schwarzschild coordinates. The
+            Shakura&ndash;Sunyaev profile \( T(r) \) in <code>diskTemp()</code> is that
+            model&rsquo;s textbook formula, rendered verbatim.</li>
+        <li>Quasinormal frequency \( M\omega = 0.37367 - 0.08896\,i \) (<code>QNM</code>)
+            with its physical scaling: pitch \( \propto 1/M \), decay time \( \propto M \).</li>
+        <li>Accretion efficiency \( \eta = 1 - \sqrt{8/9} \approx 5.7\% \)
+            (<code>ETA_ISCO</code>).</li>
+      </ul>
+      <ul data-lang="zh">
+        <li>赤道面史瓦西测地线:<code>accel()</code> 是精确的径向方程,由步长加倍的自适应 RK4
+            积分,守恒量 \( E, L \) 显式存储,每步做一次约束投影;单元测试中
+            5&times;10<sup>4</sup> 步的能量漂移 &lt;&nbsp;10<sup>&minus;9</sup>。</li>
+        <li>坐标时步长 \( d\tau = f\,\Delta t / E \):视界处的冻结是真实效应,不是缓动曲线。</li>
+        <li>红移因子 \( \sqrt{f} \),以及静止观察者的悬停加速度
+            \( M / (r^2 \sqrt{f}) \)(<code>hoverAccel()</code>)。</li>
+        <li>光子轨迹:靠近黑洞时,着色器逐像素积分精确的零测地线(Binet 方程 \( u'' + u = 3Mu^2 \)
+            的矢量形式);远处的像素则走方程 9 的弱场近似。透镜、黑影和光子环都是从积分中<em>长出来</em>的:
+            \( b_c = (3\sqrt{3}/2)\,r_s \) 是在屏幕上量出来的,不是画上去的
+            (<code>bCrit()</code> 保留为理论值和 2D 降级)。</li>
+        <li>盘面的亮度不对称:圆轨道的 \( g = \sqrt{1-3M/r}\,/\,(1-\beta\mu) \)
+            (引力红移加多普勒),观测亮度 \( \propto g^3 \),在 <code>diskEmission()</code> 里。</li>
+        <li>下落元素的潮汐形变:释放的网格每个顶点各骑一条测地线,
+            面条化是涌现出来的测地偏离,不是画上去的形变。</li>
+        <li>ISCO 在 \( 3\,r_s \)(<code>isco()</code>)与开普勒角速度
+            \( \Omega = \sqrt{M/r^3} \):在史瓦西坐标下精确。Shakura&ndash;Sunyaev 温度轮廓
+            \( T(r) \)(<code>diskTemp()</code>)则是该模型的标准公式,照原样实现。</li>
+        <li>似正规模频率 \( M\omega = 0.37367 - 0.08896\,i \)(<code>QNM</code>)
+            及其物理标度:音高 \( \propto 1/M \),衰减时间 \( \propto M \)。</li>
+        <li>吸积效率 \( \eta = 1 - \sqrt{8/9} \approx 5.7\% \)(<code>ETA_ISCO</code>)。</li>
+      </ul>
+    </div>
+    <div class="fake" data-devour>
+      <h3><span data-lang="en">Artistic license</span><span data-lang="zh">艺术加工</span></h3>
+      <ul data-lang="en">
+        <li>The ray tracer uses semi-implicit Euler with at most <code>MAXSTEP = 168</code>
+            steps per pixel, not RK4: the shadow edge is a few pixels soft, and
+            step-exhausted rays are counted as captured.</li>
+        <li>The camera is orthographic (parallel rays from infinity), and the disk is a
+            thin, planar, fbm-textured annulus: no radiative transfer, no volumetric
+            structure.</li>
+        <li>Mixed perspective, on purpose: thrown elements move in the screen plane
+            (top-down equatorial dynamics) while the hole and disk are ray-traced at a
+            77&deg; inclination (<code>u_tilt</code>) like the iconic renderings; the
+            elements&rsquo; own light is not itself ray-traced.</li>
+        <li><code>RINGDOWN_TSCALE&nbsp;=&nbsp;20</code> slows the ringdown twenty-fold. The
+            real oscillation of the demo&rsquo;s hole (&sim;12&nbsp;Hz, gone in
+            &sim;56&nbsp;ms) would be invisible.</li>
+        <li>The \( (v/c)^4 \) drag in <code>stepBody()</code> is a gameplay term
+            <em>inspired by</em> 2.5PN gravitational-wave reaction, with a tunable
+            <code>dragK</code>. Real radiation reaction is not this formula.</li>
+        <li><code>DISK_SPEED&nbsp;=&nbsp;0.35</code> slows the disk pattern&rsquo;s clock so
+            the differential rotation reads as texture rather than strobe.</li>
+        <li>Element snapshots (computed-style inlining + SVG <code>foreignObject</code>)
+            have limits: webfonts fall back to system fonts, and external images taint the
+            canvas; tainted or failed snapshots drop to the rigid CSS-transform
+            path.</li>
+        <li>The HUD entropy row&rsquo;s &ldquo;1&nbsp;px&nbsp;=&nbsp;Planck length&rdquo;
+            conversion is a joke calibration, flagged as such on the HUD itself.</li>
+        <li>The swallow threshold \( \sqrt{f} \lt 0.12 \) (<code>SWALLOW_REDSHIFT</code>)
+            truncates an infinite asymptotic freeze so the page can finish eating; throws are
+            clamped to \( 0.985c \).</li>
+      </ul>
+      <ul data-lang="zh">
+        <li>光线追踪用半隐式欧拉,每像素至多 <code>MAXSTEP = 168</code> 步,不是 RK4:
+            影子边缘有几个像素的软边,步数耗尽的光线一律按被俘获处理。</li>
+        <li>相机是正交投影(来自无穷远的平行光),盘是一圈薄的、平面的、fbm 纹理圆环:
+            没有辐射转移,没有立体结构。</li>
+        <li>透视是故意混搭的:被甩的元素在屏幕平面内运动(俯视的赤道面动力学),
+            而黑洞和盘以 77&deg; 倾角(<code>u_tilt</code>)做光线追踪,像那些标志性的模拟图像;
+            元素自己发的光并没有被追踪。</li>
+        <li><code>RINGDOWN_TSCALE&nbsp;=&nbsp;20</code> 把铃宕放慢二十倍。演示黑洞真实的振荡
+            (约 12&nbsp;Hz,约 56&nbsp;ms 内消失)根本来不及看见。</li>
+        <li><code>stepBody()</code> 里的 \( (v/c)^4 \) 阻尼是游戏项,<em>灵感来自</em>
+            2.5PN 引力波反作用,系数 <code>dragK</code> 可调。真实的辐射反作用不是这个公式。</li>
+        <li><code>DISK_SPEED&nbsp;=&nbsp;0.35</code> 放慢了盘面纹理的时钟,
+            让差速旋转读起来像纹理,而不是频闪。</li>
+        <li>元素快照(内联计算样式 + SVG <code>foreignObject</code>)有局限:
+            webfont 会退回系统字体,外链图片会污染画布;被污染或失败的快照退回刚体
+            CSS 变换路径。</li>
+        <li>HUD 熵行的"1&nbsp;px&nbsp;=&nbsp;普朗克长度"换算是玩笑标定,HUD 上自己就标明了。</li>
+        <li>吞噬阈值 \( \sqrt{f} \lt 0.12 \)(<code>SWALLOW_REDSHIFT</code>)截断了无限的渐近冻结,
+            好让页面能把饭吃完;投掷速度钳制在 \( 0.985c \)。</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="eq" id="eq1" aria-labelledby="eq1-title">
+  <div class="blk" data-devour>
+    <h2 id="eq1-title"><span class="eq-num">1</span><span data-lang="en">The Schwarzschild metric: the stage</span><span data-lang="zh">史瓦西度规:舞台</span></h2>
+  </div>
+  <div class="eq-block" data-devour>
+  $$ ds^2 \;=\; -f(r)\,dt^2 \;+\; \frac{dr^2}{f(r)} \;+\; r^2\,d\varphi^2,
+     \qquad f(r) = 1 - \frac{r_s}{r} $$
+  </div>
+  <div class="blk" data-devour>
+    <p data-lang="en">
+      A metric is the Pythagorean theorem for spacetime: feed it two nearby events, it returns
+      the &ldquo;distance&rdquo; between them. Around a mass the recipe warps. For a
+      non-rotating black hole the entire warp is carried by one scalar function,
+      \( f(r) = 1 - r_s/r \). Karl Schwarzschild found it in 1915, weeks after Einstein
+      published the field equations. Read the two places \( f \) appears. It multiplies
+      \( dt^2 \): clocks deep in the well tick slowly, and at \( r = r_s \) they appear to
+      stop. It divides \( dr^2 \): radial rulers stretch. Every effect on this page (the
+      frozen fall, the reddening, the light bending, even the pitch of the ringdown)
+      is this one function expressing itself in different ways.
+    </p>
+    <p data-lang="zh">
+      度规是时空版的勾股定理:喂给它两个相邻事件,它吐出二者之间的"距离"。在质量附近,
+      这份配方会扭曲。对一个不旋转的黑洞,全部扭曲都装在一个标量函数里:
+      \( f(r) = 1 - r_s/r \)。它由卡尔·史瓦西于 1915 年找到,距爱因斯坦发表场方程只有几周。
+      看 \( f \) 出现的两个位置。它乘在 \( dt^2 \) 上:井底深处的钟走得慢,到 \( r = r_s \)
+      处看起来干脆停摆。它除在 \( dr^2 \) 下:径向的尺子被拉长。这个页面上的每一种效应
+      (冻结的坠落、泛红、光线弯折、甚至铃宕的音高),都是这一个函数换着方式表达自己。
+    </p>
+  </div>
+  <div class="blk" data-devour>
+    <p data-lang="en">
+      The demo splits the metric&rsquo;s work in two. For everything you throw, the page is
+      declared to be the black hole&rsquo;s <em>equatorial plane</em>: the polar angle is
+      pinned at \( \theta = \pi/2 \), and distances on your screen, measured in pixels from
+      the hole&rsquo;s center, literally are the Schwarzschild coordinate \( r \). Light gets
+      the full treatment: the renderer traces photons in three dimensions (each ray stays in
+      its own orbital plane anyway, which is angular-momentum conservation), viewing
+      the scene from a 77&deg; inclination. Two perspectives, one metric; the honesty box
+      owns the mismatch.
+    </p>
+    <p data-lang="zh">
+      演示把度规的工作一分为二。对你抛出的一切,页面被宣布为黑洞的<em>赤道面</em>:
+      极角钉死在 \( \theta = \pi/2 \),屏幕上以黑洞中心为原点、按像素度量的距离,
+      就是史瓦西坐标 \( r \) 本身。光则享受完整待遇:渲染器在三维里追踪光子
+      (反正每条光线都待在自己的轨道平面里,那正是角动量守恒),从 77&deg; 的倾角观看场景。
+      两套视角,一个度规;这笔混搭记在诚实清单上。
+    </p>
+  </div>
+  <div class="code-box" data-devour>
+    <span class="box-title"><span data-lang="en">In the code</span><span data-lang="zh">代码里</span></span>
+    <p data-lang="en">
+      <code>fOf(r, rs)</code> in <code>src/physics.js</code> is \( f(r) \), and nearly every
+      other function calls it. The unit system (\( G = c = 1 \), lengths in px,
+      \( M = r_s / 2 \)) is set in the same file&rsquo;s header. The screen-to-plane mapping
+      lives in <code>makeBody()</code>: \( r = \sqrt{dx^2 + dy^2} \),
+      \( \varphi = \operatorname{atan2}(dy, dx) \) around the hole&rsquo;s center. The
+      fragment shader in <code>src/renderer.js</code> works in units of \( M = 1 \) instead
+      (pixels-per-\( M \) is <code>u_rs/2</code>), so the horizon sits at \( r = 2 \)
+      (<code>R_HORIZON</code>): the same metric, rescaled.
+    </p>
+    <p data-lang="zh">
+      <code>src/physics.js</code> 里的 <code>fOf(r, rs)</code> 就是 \( f(r) \),
+      几乎所有其他函数都要调用它。单位制(\( G = c = 1 \),长度用 px,\( M = r_s / 2 \))
+      定在同一文件的开头。屏幕到赤道面的映射在 <code>makeBody()</code>:
+      以黑洞中心为原点,\( r = \sqrt{dx^2 + dy^2} \),\( \varphi = \operatorname{atan2}(dy, dx) \)。
+      <code>src/renderer.js</code> 的片元着色器改用 \( M = 1 \) 单位(每 \( M \) 合多少像素是
+      <code>u_rs/2</code>),于是视界落在 \( r = 2 \)(<code>R_HORIZON</code>):
+      同一个度规,换了把尺子。
+    </p>
+  </div>
+  <div class="blk" data-devour>
+    <p class="see" data-lang="en"><b>On the page</b> &mdash; the whole viewport is a slice
+      through a black hole&rsquo;s equator; every pixel of distance you see is the coordinate
+      \( r \) of this metric.</p>
+    <p class="see" data-lang="zh"><b>你能看到</b> —— 整个视口就是黑洞赤道的一个切片;
+      你看到的每一像素距离,都是这条度规里的坐标 \( r \)。</p>
+  </div>
+</section>
+
+<section class="eq" id="eq2" aria-labelledby="eq2-title">
+  <div class="blk" data-devour>
+    <h2 id="eq2-title"><span class="eq-num">2</span><span data-lang="en">Geodesics: the fall itself</span><span data-lang="zh">测地线:坠落本身</span></h2>
+  </div>
+  <div class="eq-block" data-devour>
+  $$ \frac{d^2 r}{d\tau^2} \;=\; \underbrace{-\frac{M}{r^2}}_{\text{Newton}}
+     \;+\; \underbrace{\frac{L^2}{r^3}}_{\text{centrifugal}}
+     \;-\; \underbrace{\frac{3 M L^2}{r^4}}_{\text{GR}},
+     \qquad E = f\,\frac{dt}{d\tau}, \quad L = r^2 \frac{d\varphi}{d\tau} $$
+  </div>
+  <div class="blk" data-devour>
+    <p data-lang="en">
+      Freefall is the laziest possible motion: no engine, no steering, just spacetime telling
+      the object how to move. Because the Schwarzschild geometry doesn&rsquo;t change with
+      time or angle, an energy \( E \) and an angular momentum \( L \) are conserved along
+      the path, and the whole trajectory collapses to a single equation for \( r(\tau) \),
+      with \( d\varphi/d\tau = L/r^2 \) tagging along. The right-hand side reads like an
+      argument between three forces. Newton&rsquo;s inverse-square pull. The familiar
+      centrifugal barrier, which grows as \( 1/r^3 \): in Newtonian gravity it always wins
+      at small \( r \), so carry enough angular momentum and you can never fall in. And
+      Einstein&rsquo;s twist, growing as \( 1/r^4 \): close enough in, it always
+      <em>beats</em> the barrier. The floor of the well drops out. This one term is why
+      black holes eat things Newton says should orbit forever. It is why orbits precess
+      (Mercury&rsquo;s 43 arcseconds per century), and why there is an innermost stable
+      circular orbit at all.
+    </p>
+    <p data-lang="zh">
+      自由落体是最偷懒的运动:没有引擎,没有转向,只有时空在告诉物体怎么走。
+      由于史瓦西几何不随时间也不随角度改变,沿途守恒着一份能量 \( E \) 和一份角动量 \( L \),
+      整条轨迹于是坍缩成关于 \( r(\tau) \) 的一条方程,\( d\varphi/d\tau = L/r^2 \) 顺路跟着。
+      右边读起来像三股力在吵架。牛顿的平方反比引力。熟悉的离心势垒,按 \( 1/r^3 \) 增长:
+      在牛顿引力里,小 \( r \) 处永远是它赢,角动量够大,你就永远掉不进去。
+      还有爱因斯坦的加戏,按 \( 1/r^4 \) 增长:足够靠近时,它永远<em>压过</em>势垒。
+      井底被抽掉了。就是这一项,让黑洞吃掉牛顿说应当永远绕行的东西。
+      也是它让轨道进动(水星每世纪 43 角秒),让"最内稳定圆轨道"这个概念得以存在。
+    </p>
+  </div>
+  <div class="blk" data-devour>
+    <p data-lang="en">
+      A tidy way to see all of it at once is the effective potential. The conserved-energy
+      constraint can be rearranged into \( E^2 = \dot r^2 + V_{\mathrm{eff}}^2 \) with
+      \( V_{\mathrm{eff}}(r) = \sqrt{ f(r)\,\bigl( 1 + L^2 / r^2 \bigr) } \):
+      the particle behaves like a bead sliding in this one-dimensional landscape. Where the
+      landscape has a valley, circular orbits live; where the valley disappears, so does any
+      hope of orbiting. Drag the slider below across
+      \( L = \sqrt{12}\,M \approx 3.46\,M \) and watch the valley evaporate.
+    </p>
+    <p data-lang="zh">
+      要把这一切一眼看尽,最利落的办法是有效势。守恒能量约束可以改写成
+      \( E^2 = \dot r^2 + V_{\mathrm{eff}}^2 \),其中
+      \( V_{\mathrm{eff}}(r) = \sqrt{ f(r)\,\bigl( 1 + L^2 / r^2 \bigr) } \):
+      粒子就像一颗珠子,在这条一维地形上滑动。地形有山谷的地方,住着圆轨道;
+      山谷消失的地方,绕行的指望也一并消失。拖动下面的滑块,穿过
+      \( L = \sqrt{12}\,M \approx 3.46\,M \),看着山谷蒸发。
+    </p>
+  </div>
+  <figure class="fig" id="fig-veff" data-devour>
+    <canvas id="veff-canvas" aria-label="Interactive plot of the Schwarzschild effective potential versus radius, with adjustable angular momentum"></canvas>
+    <div class="fig-controls">
+      <label for="veff-L"><span data-lang="en">angular momentum L</span><span data-lang="zh">角动量 L</span></label>
+      <input type="range" id="veff-L" min="3.20" max="4.60" step="0.01" value="3.90">
+      <span class="readout" id="veff-readout"></span>
+    </div>
+    <figcaption>
+      <span data-lang="en">
+      Figure 1 &mdash; the effective potential
+      \( V_{\mathrm{eff}}(r) = \sqrt{ f\,(1 + L^2/r^2) } \) in units of \( M \)
+      (here \( r_s = 2M \)). Above \( L = \sqrt{12}\,M \) the curve has a local maximum (an
+      unstable circular orbit) and a local minimum (a stable one). As \( L \) drops toward
+      \( \sqrt{12}\,M \) the pair merges at \( r = 6M \), the ISCO, and below
+      it the potential is a pure ski slope into the hole. A particle with total energy above
+      the dashed \( E = 1 \) line and no barrier in the way escapes or plunges; the demo adds
+      a small drag (equation 14) so plunging always wins eventually.
+      </span>
+      <span data-lang="zh">
+      图 1 —— 有效势 \( V_{\mathrm{eff}}(r) = \sqrt{ f\,(1 + L^2/r^2) } \),以 \( M \)
+      为单位(此处 \( r_s = 2M \))。当 \( L \) 高于 \( \sqrt{12}\,M \) 时,曲线有一个局部极大
+      (不稳定圆轨道)和一个局部极小(稳定圆轨道)。随着 \( L \) 降向 \( \sqrt{12}\,M \),
+      这一对在 \( r = 6M \) 处并合,那就是 ISCO;再往下,势能就是一路滑进黑洞的纯雪坡。
+      总能量高于虚线 \( E = 1 \) 且前方没有势垒的粒子,要么逃逸要么坠落;
+      演示加了一点阻尼(方程 14),所以坠落终将获胜。
+      </span>
+    </figcaption>
+  </figure>
+  <div class="code-box" data-devour>
+    <span class="box-title"><span data-lang="en">In the code</span><span data-lang="zh">代码里</span></span>
+    <p data-lang="en">
+      <code>accel(r, L, M)</code> in <code>src/physics.js</code> is the radial equation
+      term for term: <code>-M/r2 + L2/(r2*r) - (3*M*L2)/(r2*r2)</code>. The private
+      <code>rk4Step()</code> advances the state \( (r, p_r, \varphi) \) one proper-time step
+      with classic fourth-order Runge&ndash;Kutta; on top of it, <code>stepBody()</code> runs
+      step-doubling error control against a relative tolerance of 10<sup>&minus;7</sup>
+      (<code>STEP_TOL</code>), the accepted error setting the next step size
+      (<code>hAdapt</code>). The constants of motion are treated as exactly that: \( E \) and
+      \( L \) are stored explicitly (<code>body.E</code>), and after each accepted step
+      \( p_r \) is projected back onto the constraint surface
+      \( p_r^2 = E^2 - f\,(1 + L^2/r^2) \). The module is DOM-free, so node unit tests check
+      energy drift (&lt;&nbsp;10<sup>&minus;9</sup> over 5&times;10<sup>4</sup> steps),
+      circular-orbit stability inside/outside the ISCO, geodesic deviation, and perihelion
+      precession against \( \Delta\varphi \approx 6\pi M / [a(1-e^2)] \).
+    </p>
+    <p data-lang="zh">
+      <code>src/physics.js</code> 里的 <code>accel(r, L, M)</code> 逐项就是那条径向方程:
+      <code>-M/r2 + L2/(r2*r) - (3*M*L2)/(r2*r2)</code>。私有的 <code>rk4Step()</code>
+      用经典四阶龙格–库塔把状态 \( (r, p_r, \varphi) \) 推进一个固有时步;
+      在它之上,<code>stepBody()</code> 做步长加倍的误差控制,相对容差 10<sup>&minus;7</sup>
+      (<code>STEP_TOL</code>),被接受的误差决定下一步步长(<code>hAdapt</code>)。
+      运动常数就按常数对待:\( E \) 与 \( L \) 显式存储(<code>body.E</code>),
+      每个被接受的步之后,把 \( p_r \) 投影回约束面 \( p_r^2 = E^2 - f\,(1 + L^2/r^2) \)。
+      模块不碰 DOM,node 单测据此检查能量漂移(5&times;10<sup>4</sup> 步
+      &lt;&nbsp;10<sup>&minus;9</sup>)、ISCO 内外圆轨道的稳定性、测地偏离,
+      以及对照 \( \Delta\varphi \approx 6\pi M / [a(1-e^2)] \) 的近日点进动。
+    </p>
+  </div>
+  <div class="blk" data-devour>
+    <p class="see" data-lang="en"><b>On the page</b> &mdash; throw a block sideways and it
+      traces a rosette: an ellipse whose perihelion visibly precesses, the same GR term that
+      moved Mercury&rsquo;s. Throw it gently and it skips the ellipse and spirals straight in.</p>
+    <p class="see" data-lang="zh"><b>你能看到</b> —— 侧向甩出一个块,它会画出一朵玫瑰花结:
+      一只近日点肉眼可见地进动的椭圆,正是挪动了水星轨道的那一项。轻轻一丢,
+      它就跳过椭圆,直接盘旋坠入。</p>
+  </div>
+</section>
+
+<section class="eq" id="eq3" aria-labelledby="eq3-title">
+  <div class="blk" data-devour>
+    <h2 id="eq3-title"><span class="eq-num">3</span><span data-lang="en">Coordinate time: why the fall freezes</span><span data-lang="zh">坐标时:坠落为何冻结</span></h2>
+  </div>
+  <div class="eq-block" data-devour>
+  $$ d\tau \;=\; \frac{f(r)}{E}\,\Delta t $$
+  </div>
+  <div class="blk" data-devour>
+    <p data-lang="en">
+      There are two clocks in this story. The falling paragraph carries its own wristwatch,
+      ticking proper time \( \tau \); by that watch, the plunge through the horizon is quick
+      and uneventful. You, the distant observer scrolling the page, run on coordinate time
+      \( t \). The conversion between the two is the conserved energy relation
+      \( E = f \, dt/d\tau \), flipped around: for each second of <em>your</em> time, the
+      faller experiences only \( f/E \) seconds of its own. Near the horizon \( f \to 0 \),
+      so the exchange rate collapses. The object&rsquo;s remaining story gets smeared over an
+      infinite amount of your time. From outside, nothing ever crosses: it just slows,
+      dims, and freezes onto the horizon like a fly in amber. Astrophysicists in the 1960s
+      called these objects &ldquo;frozen stars&rdquo; before &ldquo;black hole&rdquo; won the
+      naming war, and this equation is why.
+    </p>
+    <p data-lang="zh">
+      这个故事里有两只钟。下落的段落戴着自己的腕表,滴答走着固有时 \( \tau \);
+      按那只表,穿过视界的坠落又快又平淡。而你(滚动页面的远方观察者)用的是坐标时
+      \( t \)。两者之间的汇率就是守恒能量关系 \( E = f \, dt/d\tau \) 反过来写:
+      <em>你的</em>每一秒,坠落者只经历它自己的 \( f/E \) 秒。临近视界 \( f \to 0 \),
+      汇率崩盘。物体剩下的故事被摊到你的无限长时间上。从外面看,什么都没有越过视界:
+      它只是变慢、变暗,像琥珀里的飞虫一样冻结在视界上。二十世纪六十年代的天体物理学家
+      把这类天体叫"冻结星",直到"黑洞"赢下命名之争;原因就是这条方程。
+    </p>
+  </div>
+  <div class="blk" data-devour>
+    <p data-lang="en">
+      The browser necessarily runs on <em>your</em> clock: <code>requestAnimationFrame</code>
+      hands the demo wall-clock seconds, which are distant-observer coordinate time. So the
+      integrator works in the physically natural variable \( \tau \), but spends it against a
+      coordinate-time budget, converting through this equation each substep. The freeze then
+      emerges by itself: no easing function, no scripted &ldquo;swallow&rdquo;
+      animation. As \( f \to 0 \), each frame simply buys less and less proper time. The
+      on-screen motion grinds to a halt exactly the way general relativity says it should.
+    </p>
+    <p data-lang="zh">
+      浏览器必然跑在<em>你的</em>钟上:<code>requestAnimationFrame</code> 递给演示的是挂钟秒,
+      也就是远方观察者的坐标时。所以积分器在物理上更自然的变量 \( \tau \) 里工作,
+      却按坐标时预算来开销,每个子步都用这条方程换算一次。于是冻结自己涌现出来:
+      没有缓动函数,没有写好脚本的"吞噬"动画。当 \( f \to 0 \),每一帧能买到的固有时
+      越来越少。屏幕上的运动就照着广义相对论说的那样,一点点碾停。
+    </p>
+  </div>
+  <div class="code-box" data-devour>
+    <span class="box-title"><span data-lang="en">In the code</span><span data-lang="zh">代码里</span></span>
+    <p data-lang="en">
+      <code>stepBody(body, {rs, cPx, dragK}, dtSec)</code> in <code>src/physics.js</code>
+      converts the frame to a coordinate-time budget <code>remaining = cPx * dtSec</code>
+      (px), then loops: take a proper-time step
+      <code>h = min((f * dt) / E, hmax, hAdapt)</code> (the frame budget converted
+      through this equation, capped near the hole and by the error-controlled
+      <code>hAdapt</code>), advance with the step-doubled RK4, and charge
+      <code>remaining -= h * E / f</code> back in coordinate time. The on-screen crawl is
+      visible in <code>screenState()</code>: the coordinate velocities it reports are
+      \( v_r = p_r f / E \), \( v_t = L f / (r E) \): both proportional to \( f \),
+      both dying at the horizon.
+    </p>
+    <p data-lang="zh">
+      <code>src/physics.js</code> 里的 <code>stepBody(body, {rs, cPx, dragK}, dtSec)</code>
+      先把这一帧折算成坐标时预算 <code>remaining = cPx * dtSec</code>(px),然后循环:
+      取一个固有时步 <code>h = min((f * dt) / E, hmax, hAdapt)</code>(帧预算经这条方程换算,
+      在黑洞附近另有上限,并受误差控制的 <code>hAdapt</code> 约束),用步长加倍的 RK4 推进,
+      再按坐标时记账 <code>remaining -= h * E / f</code>。屏幕上的爬行在
+      <code>screenState()</code> 里看得见:它报告的坐标速度是 \( v_r = p_r f / E \)、
+      \( v_t = L f / (r E) \):都正比于 \( f \),都在视界处熄灭。
+    </p>
+  </div>
+  <div class="blk" data-devour>
+    <p class="see" data-lang="en"><b>On the page</b> &mdash; elements never visibly cross the
+      black edge: they decelerate, hang, and fade at its rim, and only the threshold rule of
+      equation 5 finally lets the page delete them.</p>
+    <p class="see" data-lang="zh"><b>你能看到</b> —— 元素永远不会肉眼可见地越过黑边:
+      它们减速、悬住、在边缘上淡出,直到方程 5 的阈值规则最终允许页面删掉它们。</p>
+  </div>
+</section>
+
+<section class="eq" id="eq4" aria-labelledby="eq4-title">
+  <div class="blk" data-devour>
+    <h2 id="eq4-title"><span class="eq-num">4</span><span data-lang="en">A mouse throw becomes a four-velocity</span><span data-lang="zh">一次甩鼠标,变成一个四速度</span></h2>
+  </div>
+  <div class="eq-block" data-devour>
+  $$ u \cdot u = -1 \;\;\Longrightarrow\;\;
+     \left( \frac{dt}{d\tau} \right)^{\!2}
+     = \frac{1}{\,f - \dot r^2 / f - r^2 \dot\varphi^2\,}
+     = \frac{1}{\,f\,\bigl(1 - v_{\mathrm{loc}}^2\bigr)\,} $$
+  </div>
+  <div class="blk" data-devour>
+    <p data-lang="en">
+      When you let go of a dragged element, the demo knows four mundane numbers: where the
+      pointer is and how fast it was moving, in pixels per second of <em>your</em> time. The
+      geodesic integrator wants something more refined: the conserved pair \( (E, L) \) and a
+      proper-time radial velocity. The bridge is relativity&rsquo;s type system: the
+      rule that every massive object&rsquo;s four-velocity has unit length,
+      \( u \cdot u = -1 \). Think of it as a normalization check the initial conditions
+      must pass before the physics will accept them. Given the throw&rsquo;s
+      coordinate-time rates \( \dot r, \dot\varphi \), the constraint fixes the missing
+      component \( dt/d\tau \) outright. From it, \( E = f\,dt/d\tau \) and
+      \( L = r^2 \dot\varphi \, dt/d\tau \) follow immediately.
+    </p>
+    <p data-lang="zh">
+      你松开被拖拽的元素时,演示只知道四个平凡的数字:指针在哪里、它刚才移动得多快,
+      单位是<em>你的</em>每秒像素。测地线积分器想要的东西更讲究:守恒对 \( (E, L) \)
+      和一个固有时径向速度。桥梁是相对论的类型系统:每个有质量物体的四速度必须是单位长度,
+      \( u \cdot u = -1 \)。把它当成初始条件必须先通过的归一化检查。给定投掷的坐标时速率
+      \( \dot r, \dot\varphi \),这条约束直接定出缺失的分量 \( dt/d\tau \)。
+      随后,\( E = f\,dt/d\tau \) 与 \( L = r^2 \dot\varphi \, dt/d\tau \) 立刻跟上。
+    </p>
+  </div>
+  <div class="blk" data-devour>
+    <p data-lang="en">
+      The denominator also enforces the speed limit. The combination
+      \( v_{\mathrm{loc}}^2 = \dot r^2 / f^2 + r^2 \dot\varphi^2 / f \) is the speed a
+      <em>local static observer</em> (someone hovering right at the release point)
+      would measure with their own rulers and clocks. Ask for
+      \( v_{\mathrm{loc}} \ge 1 \) (a superluminal throw, easy to do with a flick of the
+      wrist near the hole where \( f \) is small) and the bracket goes non-positive:
+      \( dt/d\tau \) has no real solution. The universe rejects your input. Because
+      \( v_{\mathrm{loc}}^2 \) is a homogeneous quadratic in \( (\dot r, \dot\varphi) \),
+      the demo handles this gracefully: it rescales both rates by one factor until
+      the local speed is exactly \( 0.985c \). The throw keeps its direction and loses
+      only its ambition.
+    </p>
+    <p data-lang="zh">
+      分母还顺手执行了限速。组合
+      \( v_{\mathrm{loc}}^2 = \dot r^2 / f^2 + r^2 \dot\varphi^2 / f \)
+      是<em>局部静止观察者</em>(悬停在释放点上的人)用自己的尺和钟量出的速度。
+      如果你要求 \( v_{\mathrm{loc}} \ge 1 \)(超光速投掷;在 \( f \) 很小的黑洞附近,
+      手腕一抖就能做到),括号就变成非正:\( dt/d\tau \) 没有实数解。宇宙拒收你的输入。
+      好在 \( v_{\mathrm{loc}}^2 \) 是 \( (\dot r, \dot\varphi) \) 的齐次二次式,
+      演示可以优雅收场:把两个速率按同一个因子缩小,直到局部速度恰为 \( 0.985c \)。
+      保住投掷的方向,压住它的野心。
+    </p>
+  </div>
+  <div class="code-box" data-devour>
+    <span class="box-title"><span data-lang="en">In the code</span><span data-lang="zh">代码里</span></span>
+    <p data-lang="en">
+      <code>makeBody({x, y, vx, vy, cx, cy, rs, cPx})</code> in <code>src/physics.js</code>
+      does the whole conversion: radial/tangential projections
+      <code>rdot = (dx*vx + dy*vy)/(r*cPx)</code> and
+      <code>phidot = (dx*vy - dy*vx)/(r*r*cPx)</code>, the clamp against
+      <code>VMAX_LOCAL = 0.985</code>, then <code>ut = 1/sqrt(f*(1 - vloc2))</code> and the
+      returned state <code>{r, phi, pr: rdot*ut, L: r*r*phidot*ut}</code>. The throw velocity
+      itself comes from <code>interaction.js</code>, whose <code>onMove</code> handler keeps
+      an exponential moving average of pointer velocity with an 80&nbsp;ms time constant,
+      so the release uses your recent flick, not one noisy frame. Release points are
+      floored at \( 1.05\,r_s \) so a throw can&rsquo;t start inside the horizon.
+    </p>
+    <p data-lang="zh">
+      <code>src/physics.js</code> 里的 <code>makeBody({x, y, vx, vy, cx, cy, rs, cPx})</code>
+      一手包办整个换算:径向/切向投影 <code>rdot = (dx*vx + dy*vy)/(r*cPx)</code> 与
+      <code>phidot = (dx*vy - dy*vx)/(r*r*cPx)</code>,对 <code>VMAX_LOCAL = 0.985</code>
+      的钳制,然后 <code>ut = 1/sqrt(f*(1 - vloc2))</code>,返回状态
+      <code>{r, phi, pr: rdot*ut, L: r*r*phidot*ut}</code>。投掷速度本身来自
+      <code>interaction.js</code>:它的 <code>onMove</code> 处理器维护一个时间常数 80&nbsp;ms
+      的指针速度指数滑动平均,所以释放用的是你最近的那一甩,而不是某个噪声帧。
+      释放点的半径下限是 \( 1.05\,r_s \),投掷不可能从视界里面开始。
+    </p>
+  </div>
+  <div class="blk" data-devour>
+    <p class="see" data-lang="en"><b>On the page</b> &mdash; flick an element as violently as
+      you like: it leaves your cursor at most at 98.5% of the (pixel) speed of light, and the
+      physics downstream never sees an illegal state.</p>
+    <p class="see" data-lang="zh"><b>你能看到</b> —— 随你多用力地甩:元素离开光标时至多是
+      (像素)光速的 98.5%,下游的物理永远看不到非法状态。</p>
+  </div>
+</section>
+
+<section class="eq" id="eq5" aria-labelledby="eq5-title">
+  <div class="blk" data-devour>
+    <h2 id="eq5-title"><span class="eq-num">5</span><span data-lang="en">Gravitational redshift: the fade to black</span><span data-lang="zh">引力红移:渐隐成黑</span></h2>
+  </div>
+  <div class="eq-block" data-devour>
+  $$ \frac{\nu_{\infty}}{\nu_{\mathrm{emit}}} \;=\; \sqrt{f(r)}
+     \;=\; \sqrt{1 - \frac{r_s}{r}}, \qquad
+     \text{swallow when } \sqrt{f} \lt 0.12 $$
+  </div>
+  <div class="blk" data-devour>
+    <p data-lang="en">
+      Light climbing out of a gravitational well pays a toll in energy. A photon emitted at
+      radius \( r \) with frequency \( \nu_{\mathrm{emit}} \) arrives at your distant screen
+      stretched to \( \nu_\infty = \sqrt{f}\,\nu_{\mathrm{emit}} \); the same factor is the
+      rate of a static clock at \( r \) compared to yours: redshift and time dilation
+      are one phenomenon wearing two hats. This factor is the toll a hovering emitter pays; a
+      genuinely infalling one is Doppler-shifted further, a surcharge the demo quietly forgives.
+      For something falling toward the horizon, this is
+      a dimmer switch wired to geometry. Blues sag toward red, then infrared. And the object
+      dims twice over: each photon arrives with less energy, <em>and</em> the frozen-time
+      effect of equation 3 means photons arrive less and less often. The last light from an
+      infalling object is a trickle of ever-redder, ever-rarer photons: a fade-out the
+      universe performs without a compositor.
+    </p>
+    <p data-lang="zh">
+      从引力井里向上爬的光,要交能量的过路费。在半径 \( r \) 处以频率
+      \( \nu_{\mathrm{emit}} \) 发出的光子,抵达你远方的屏幕时被拉伸到
+      \( \nu_\infty = \sqrt{f}\,\nu_{\mathrm{emit}} \);同一个因子也是 \( r \)
+      处静止时钟相对你的快慢:红移和时间膨胀是同一现象戴了两顶帽子。
+      这个因子是悬停发射者交的过路费;真正下落的发射者还会再被多普勒频移一道,演示悄悄免掉了这一笔。
+      对一件正落向视界的东西,这是一只接在几何上的调光开关。蓝光垂向红光,再垂向红外。
+      而且物体是双重变暗:每个光子到达时能量更少,<em>而且</em>方程 3 的冻结时间效应
+      让光子到达得越来越稀。坠落物的最后一缕光,是一串越来越红、越来越稀的光子:
+      一场宇宙不用合成器就能演出的淡出。
+    </p>
+  </div>
+  <div class="blk" data-devour>
+    <p data-lang="en">
+      Strictly, that fade never finishes: \( \sqrt{f} \) reaches zero only at the horizon,
+      which by equation 3 takes forever on your clock. The demo therefore draws an honest,
+      practical line. When \( \sqrt{f} \) drops below \( 0.12 \) (at
+      \( r \approx 1.015\,r_s \), where the element renders at a few percent brightness),
+      it is declared swallowed and its mass is transferred to the hole. Think of it
+      as garbage-collecting an object whose remaining observable lifetime is pure asymptote.
+    </p>
+    <p data-lang="zh">
+      严格说,这场淡出永远演不完:\( \sqrt{f} \) 只有在视界上才到零,而按方程 3,
+      那在你的钟上要花无限久。所以演示画了一条诚实而务实的线。当 \( \sqrt{f} \) 跌破
+      \( 0.12 \)(也就是 \( r \approx 1.015\,r_s \),元素只剩下百分之几的亮度),
+      它就被宣布吞噬,质量转入黑洞。可以把这理解为垃圾回收:
+      回收一个可观测余生只剩纯渐近线的对象。
+    </p>
+  </div>
+  <div class="code-box" data-devour>
+    <span class="box-title"><span data-lang="en">In the code</span><span data-lang="zh">代码里</span></span>
+    <p data-lang="en">
+      The threshold is <code>SWALLOW_REDSHIFT = 0.12</code> in <code>src/physics.js</code>;
+      <code>stepBody()</code> returns <code>false</code> once
+      <code>Math.sqrt(fNew) &lt; SWALLOW_REDSHIFT</code> (or \( r \le 1.001\,r_s \)).
+      <code>screenState()</code> exports <code>redshift = Math.sqrt(f)</code>, and
+      <code>interaction.js</code>&rsquo;s <code>tick()</code> computes it <em>per vertex</em>
+      of the falling mesh, feeding the mesh fragment shader in
+      <code>src/renderer.js</code>: each fragment is dimmed by its interpolated \( z \) and
+      faded toward an ember tint as \( z \to 0 \), with per-vertex opacity a smoothstep of
+      \( (z - 0.12)/0.18 \) so every corner finishes fading right as its own threshold trips.
+      The rigid fallback drives CSS filters with the same number:
+      <code>brightness(0.25 + 0.75z)</code>, <code>sepia((1-z)*0.85)</code>,
+      <code>hue-rotate(-25(1-z)deg)</code>. The disk&rsquo;s light gets the circular-orbit
+      generalization of the same factor: the \( \sqrt{1 - 3M/r} \) inside equation
+      11&rsquo;s \( g \).
+    </p>
+    <p data-lang="zh">
+      阈值是 <code>src/physics.js</code> 里的 <code>SWALLOW_REDSHIFT = 0.12</code>;
+      一旦 <code>Math.sqrt(fNew) &lt; SWALLOW_REDSHIFT</code>(或 \( r \le 1.001\,r_s \)),
+      <code>stepBody()</code> 就返回 <code>false</code>。<code>screenState()</code> 导出
+      <code>redshift = Math.sqrt(f)</code>,<code>interaction.js</code> 的 <code>tick()</code>
+      对下落网格<em>逐顶点</em>计算它,喂给 <code>src/renderer.js</code> 里的网格片元着色器:
+      每个片元按插值出的 \( z \) 变暗,并在 \( z \to 0 \) 时向余烬色调褪去,
+      逐顶点的不透明度是 \( (z - 0.12)/0.18 \) 的 smoothstep,每个角都恰好在自己的阈值
+      触发时褪完。刚体降级路径用同一个数字驱动 CSS 滤镜:
+      <code>brightness(0.25 + 0.75z)</code>、<code>sepia((1-z)*0.85)</code>、
+      <code>hue-rotate(-25(1-z)deg)</code>。盘面的光享受同一因子的圆轨道推广:
+      方程 11 的 \( g \) 里那个 \( \sqrt{1 - 3M/r} \)。
+    </p>
+  </div>
+  <div class="blk" data-devour>
+    <p class="see" data-lang="en"><b>On the page</b> &mdash; falling blocks turn amber, then
+      ember, then translucent, and wink out a hair&rsquo;s breadth above the shadow,
+      never visibly crossing it.</p>
+    <p class="see" data-lang="zh"><b>你能看到</b> —— 坠落的块先变琥珀色,再变余烬色,
+      再变半透明,最后在影子上方一发丝处熄灭,从不肉眼可见地越过它。</p>
+  </div>
+</section>
+
+<section class="eq" id="eq6" aria-labelledby="eq6-title">
+  <div class="blk" data-devour>
+    <h2 id="eq6-title"><span class="eq-num">6</span><span data-lang="en">Tidal stretching: spaghettification</span><span data-lang="zh">潮汐拉伸:面条化</span></h2>
+  </div>
+  <div class="eq-block" data-devour>
+  $$ \frac{\partial^2 \xi}{\partial \tau^2} = +\frac{2M}{r^3}\,\xi \;\;\text{(radial)},
+     \qquad
+     \frac{\partial^2 \xi}{\partial \tau^2} = -\frac{M}{r^3}\,\xi \;\;\text{(transverse)} $$
+  </div>
+  <div class="blk" data-devour>
+    <p data-lang="en">
+      Gravity you can&rsquo;t feel; gravity&rsquo;s <em>gradient</em> you can. In freefall
+      every part of you falls, so no scale would register weight. But your feet,
+      being closer to the hole, are asked to fall on a slightly tighter trajectory than your
+      head. That disagreement between neighboring geodesics is tidal force. Near a black hole
+      it stops being poetic: stretched lengthwise by \( +2M/r^3 \) per unit length, squeezed
+      from the sides by \( -M/r^3 \), an infalling astronaut becomes what Martin Rees
+      memorably named spaghetti. Note the ratio: the stretch is exactly twice the
+      squeeze, so to first order volume is preserved. You are extruded, not compacted. The
+      \( 1/r^3 \) scaling is the practical menace: halve your distance and the tide is eight
+      times stronger. (For supermassive holes \( M/r^3 \) at the horizon is tiny;
+      you&rsquo;d cross Sagittarius&nbsp;A*&rsquo;s horizon intact and un-noodled. The
+      demo&rsquo;s hole is small and mean.)
+    </p>
+    <p data-lang="zh">
+      引力本身感觉不到;引力的<em>梯度</em>感觉得到。自由落体中你的每一部分都在坠落,
+      体重秤读不出任何重量。但你的脚比头更靠近黑洞,被要求沿一条更紧的轨迹下坠。
+      相邻测地线之间的这点分歧,就是潮汐力。在黑洞附近它不再诗意:
+      沿纵向按每单位长度 \( +2M/r^3 \) 拉伸,从两侧按 \( -M/r^3 \) 挤压,
+      坠入的宇航员变成马丁·里斯起的那个难忘的名字:意面。注意比例:
+      拉伸恰是挤压的两倍,一阶近似下体积守恒。你是被挤成条,不是被压成饼。
+      \( 1/r^3 \) 的标度才是现实的威胁:距离减半,潮汐强八倍。
+      (对超大质量黑洞,视界处的 \( M/r^3 \) 反而微小;你能完好无损、不成面条地穿过人马座
+      A* 的视界。演示里这颗洞又小又凶。)
+    </p>
+  </div>
+  <div class="blk" data-devour>
+    <p data-lang="en">
+      The demo does not <em>paint</em> this equation onto the element; it lets it
+      happen. A released paragraph is sampled into a grid of test particles, one geodesic per
+      vertex, all launched with your throw&rsquo;s velocity from slightly different
+      positions. The \( \pm M/r^3 \) law above is then simply what you watch: neighboring
+      geodesics disagree more and more violently as \( r \) shrinks, and the mesh stretches
+      because spacetime pulls its sample points apart. Spaghettification here is emergent
+      geodesic deviation, not a transform.
+    </p>
+    <p data-lang="zh">
+      演示并不把这条方程<em>画</em>到元素上;它让方程自己发生。被释放的段落被采样成一张
+      试验粒子网格,每个顶点一条测地线,全部带着你投掷的速度、从略有不同的位置出发。
+      于是上面那条 \( \pm M/r^3 \) 定律就是你看到的东西本身:随着 \( r \) 缩小,
+      相邻测地线的分歧越来越剧烈,网格被拉开,因为时空在把它的采样点扯散。
+      这里的面条化是涌现出来的测地偏离,不是一个变换。
+    </p>
+  </div>
+  <div class="code-box" data-devour>
+    <span class="box-title"><span data-lang="en">In the code</span><span data-lang="zh">代码里</span></span>
+    <p data-lang="en">
+      <code>releaseItem()</code> in <code>src/interaction.js</code> subdivides the
+      element&rsquo;s interior into a <code>(gx+1)&times;(gy+1)</code> grid (one cell per
+      &sim;40&nbsp;px) and calls <code>makeBody()</code> once <em>per vertex</em>:
+      same initial velocity, different position. Each frame, every vertex is advanced
+      independently by <code>stepBody()</code>, and the WebGL mesh from
+      <code>createMesh()</code> in <code>src/renderer.js</code> warps as those geodesics
+      diverge (there is a unit test asserting radial separations stretch and transverse ones
+      squeeze mid-fall). The old CSS route survives as the rigid fallback:
+      <code>screenState()</code> exports <code>tidal = min(1, 4*(rs/r)^3)</code> (the
+      correct cubic law with a gain and a cap), applied as
+      <code>scale(1 + 2*tidal, 1/(1 + tidal))</code>, the 2:1 anatomy, rotated so the long
+      axis chases <code>vAngle</code>.
+    </p>
+    <p data-lang="zh">
+      <code>src/interaction.js</code> 里的 <code>releaseItem()</code> 把元素内部细分成
+      <code>(gx+1)&times;(gy+1)</code> 网格(约每 40&nbsp;px 一格),对<em>每个顶点</em>
+      各调一次 <code>makeBody()</code>:初速相同,位置不同。每一帧,每个顶点由
+      <code>stepBody()</code> 独立推进,<code>src/renderer.js</code> 里
+      <code>createMesh()</code> 建的 WebGL 网格随这些测地线的发散而扭曲
+      (有一条单测断言:坠落途中径向间距拉伸、切向间距压缩)。旧的 CSS 路线作为刚体降级保留:
+      <code>screenState()</code> 导出 <code>tidal = min(1, 4*(rs/r)^3)</code>
+      (正确的三次方定律加增益和上限),以 <code>scale(1 + 2*tidal, 1/(1 + tidal))</code>
+      施加,正是 2:1 的解剖比例,并旋转到长轴追着 <code>vAngle</code>。
+    </p>
+  </div>
+  <div class="blk" data-devour>
+    <p class="see" data-lang="en"><b>On the page</b> &mdash; in its final orbits a paragraph
+      visibly elongates and thins as its vertices&rsquo; geodesics fan apart, the near edge
+      falling ahead of the far one: typography, al dente.</p>
+    <p class="see" data-lang="zh"><b>你能看到</b> —— 在最后几圈里,一个段落肉眼可见地被拉长、
+      变细,顶点们的测地线呈扇形散开,近端坠得比远端快:排版,煮到弹牙。</p>
+  </div>
+</section>
+
+<section class="eq" id="eq7" aria-labelledby="eq7-title">
+  <div class="blk" data-devour>
+    <h2 id="eq7-title"><span class="eq-num">7</span><span data-lang="en">The horizon grows</span><span data-lang="zh">视界在长大</span></h2>
+  </div>
+  <div class="eq-block" data-devour>
+  $$ M \;\to\; M + m, \qquad r_s = 2M, \qquad A = 4\pi r_s^2 = 16\pi M^2 $$
+  </div>
+  <div class="blk" data-devour>
+    <p data-lang="en">
+      Black holes are the universe&rsquo;s simplest bookkeepers. Feed one a paragraph of mass
+      \( m \) and its mass becomes \( M + m \); no digestion, no remainder. Because the
+      horizon radius is strictly linear in mass, \( r_s = 2M \), the shadow&rsquo;s growth is
+      a direct readout of everything ever eaten. The horizon <em>area</em> grows as
+      \( M^2 \), and by Hawking&rsquo;s area theorem it can never shrink. That is the
+      thermodynamic thread we pick up again in equation 15.
+    </p>
+    <p data-lang="zh">
+      黑洞是宇宙里最简单的记账员。喂它一段质量为 \( m \) 的文字,它的质量就变成
+      \( M + m \);不用消化,没有余数。由于视界半径严格线性于质量,\( r_s = 2M \),
+      影子的增长就是"迄今吃掉的一切"的直接读数。视界<em>面积</em>按 \( M^2 \) 增长,
+      而按霍金的面积定理,它永远不会缩小。这根热力学线头,我们在方程 15 再捡起来。
+    </p>
+  </div>
+  <div class="blk" data-devour>
+    <p data-lang="en">
+      What is the mass of a <code>&lt;div&gt;</code>? The demo makes the simplest defensible
+      choice: mass proportional to pixel area, \( m = k_m \cdot (\text{width} \times
+      \text{height}) \). The constant \( k_m \) is calibrated at activation time: sum
+      the area of every devourable element on the page, then solve for the coefficient that
+      makes the fully-fed hole reach its configured maximum. The default maximum is a
+      horizon of one fifth of the viewport&rsquo;s short side. Your page&rsquo;s layout literally
+      determines the black hole&rsquo;s final size.
+    </p>
+    <p data-lang="zh">
+      一个 <code>&lt;div&gt;</code> 的质量是多少?演示做了最简单而站得住脚的选择:
+      质量正比于像素面积,\( m = k_m \cdot (\text{width} \times \text{height}) \)。
+      常数 \( k_m \) 在激活时标定:把页面上所有可吞元素的面积求和,反解出一个系数,
+      使得吃饱的黑洞恰好达到配置的最大值。默认的最大值,是视界为视口短边的五分之一。
+      你页面的排版,毫不比喻地决定了这颗黑洞的最终尺寸。
+    </p>
+  </div>
+  <div class="code-box" data-devour>
+    <span class="box-title"><span data-lang="en">In the code</span><span data-lang="zh">代码里</span></span>
+    <p data-lang="en">
+      In <code>blackhole.js</code>, <code>calibrate()</code> measures
+      <code>getBoundingClientRect()</code> areas of all targets and sets
+      <code>kM = (Mmax - M) / sum</code>, with <code>Mmax = rsMax()/2</code> and
+      <code>rsMax = maxRsFraction * min(vw, vh)</code>. The <code>onSwallow(area)</code>
+      callback then applies equation 7: <code>M = Math.min(Mmax, M + kM * area)</code>,
+      bumps the swallow counter, and triggers the flare and ringdown. The rendered radius
+      <code>rsShown</code> relaxes toward \( 2M \) with a 0.25&nbsp;s time constant, so
+      growth reads as a swell rather than a pop.
+    </p>
+    <p data-lang="zh">
+      在 <code>blackhole.js</code> 里,<code>calibrate()</code> 用
+      <code>getBoundingClientRect()</code> 量出所有目标的面积并设定
+      <code>kM = (Mmax - M) / sum</code>,其中 <code>Mmax = rsMax()/2</code>、
+      <code>rsMax = maxRsFraction * min(vw, vh)</code>。随后 <code>onSwallow(area)</code>
+      回调施行方程 7:<code>M = Math.min(Mmax, M + kM * area)</code>,给吞噬计数加一,
+      并触发耀发与铃宕。展示半径 <code>rsShown</code> 以 0.25&nbsp;s 的时间常数向
+      \( 2M \) 松弛,生长读起来是一次鼓胀,而不是一声爆开。
+    </p>
+  </div>
+  <div class="blk" data-devour>
+    <p class="see" data-lang="en"><b>On the page</b> &mdash; every meal visibly enlarges the
+      shadow, the photon ring, and the disk with it; the HUD&rsquo;s \( r_s \) row and mass
+      progress bar tick upward in exact proportion to the pixels consumed.</p>
+    <p class="see" data-lang="zh"><b>你能看到</b> —— 每顿饭都肉眼可见地撑大影子、光子环和盘;
+      HUD 的 \( r_s \) 一行与质量进度条,严格按吃进的像素数往上走。</p>
+  </div>
+</section>
+
+<section class="eq" id="eq8" aria-labelledby="eq8-title">
+  <div class="blk" data-devour>
+    <h2 id="eq8-title"><span class="eq-num">8</span><span data-lang="en">Ringdown: the bell of spacetime</span><span data-lang="zh">铃宕:时空之钟</span></h2>
+  </div>
+  <div class="eq-block" data-devour>
+  $$ M\omega \;=\; 0.37367 \;-\; 0.08896\,i
+     \qquad (\ell = 2 \text{ fundamental mode}) $$
+  </div>
+  <div class="blk" data-devour>
+    <p data-lang="en">
+      Strike a bell and it doesn&rsquo;t emit noise. It rings at frequencies set by
+      its own shape, each overtone dying away at its own rate. A perturbed black hole does
+      exactly the same with spacetime itself. Swallow something, and the horizon wobbles
+      through a set of <em>quasinormal modes</em>: damped oscillations whose complex
+      frequencies are fixed entirely by the hole&rsquo;s mass (and spin, for rotating holes).
+      The real part is the pitch; the imaginary part is the decay. For a Schwarzschild
+      hole&rsquo;s dominant (quadrupole, \( \ell = 2 \)) mode that number is
+      \( M\omega = 0.37367 - 0.08896\,i \). Since the product \( M\omega \) is fixed,
+      frequency scales as \( 1/M \) and damping time as \( M \): big bells ring low
+      and long. This is not a metaphor from acoustics: it is what LIGO actually hears at the
+      end of every merger. Matching the ringdown&rsquo;s pitch-and-decay pair against tables
+      of such numbers, this one and its spinning-hole cousins, is how the remnant&rsquo;s
+      mass and spin are weighed.
+    </p>
+    <p data-lang="zh">
+      敲一口钟,它发出的不是噪声。它按自己形状规定的频率鸣响,每个泛音以各自的速率消逝。
+      被扰动的黑洞对时空本身做的事一模一样。吞下点什么,视界就会经历一组<em>似正规模</em>的晃动:
+      阻尼振荡,其复频率完全由黑洞的质量决定(旋转黑洞还要加上自旋)。实部是音高,虚部是衰减。
+      史瓦西黑洞占主导的(四极,\( \ell = 2 \))模式,那个数就是
+      \( M\omega = 0.37367 - 0.08896\,i \)。既然乘积 \( M\omega \) 固定,
+      频率就按 \( 1/M \) 标度,阻尼时间按 \( M \) 标度:大钟低鸣而悠长。
+      这不是从声学借来的比喻:LIGO 在每次并合的尾声里听到的正是它。
+      把铃宕的"音高–衰减"对与这类数字(这个值及其旋转黑洞的表亲)比对,正是称量并合残骸质量与自旋的办法。
+    </p>
+  </div>
+  <div class="blk" data-devour>
+    <p data-lang="en">
+      Scaled to the demo: the initial hole (\( M = 8 \) px, \( c = 1600 \) px/s) would ring
+      at about 12&nbsp;Hz and fade in roughly 56&nbsp;ms, over before your next
+      glance. So the demo slows time twentyfold for this one effect (declared in the honesty
+      box), giving a stately &sim;0.6&nbsp;Hz wobble that decays in about a second. The
+      physical scalings survive intact: each meal makes the hole bigger, hence the
+      ring lower-pitched and longer-lived.
+    </p>
+    <p data-lang="zh">
+      换算到演示里:初始黑洞(\( M = 8 \) px,\( c = 1600 \) px/s)会以约 12&nbsp;Hz 鸣响,
+      约 56&nbsp;ms 内消退,你还没来得及看它一眼就结束了。所以演示单独为这一个效应把时间
+      放慢二十倍(已写进诚实清单),换来一个从容的约 0.6&nbsp;Hz 晃动,约一秒内衰减。
+      物理标度忠实保留:每吃一顿,黑洞更大,铃声便更低沉、余音更长。
+    </p>
+  </div>
+  <div class="code-box" data-devour>
+    <span class="box-title"><span data-lang="en">In the code</span><span data-lang="zh">代码里</span></span>
+    <p data-lang="en">
+      The mode constant is <code>QNM = { re: 0.37367, im: 0.08896 }</code> in
+      <code>src/physics.js</code>. <code>ringdownOffset(tSec, rsPx, cPx, amp)</code> builds
+      the damped cosine with <code>omega = QNM.re * cPx / (M * RINGDOWN_TSCALE)</code> and
+      <code>tauD = M * RINGDOWN_TSCALE / (QNM.im * cPx)</code>: the \( 1/M \) and
+      \( M \) scalings verbatim, stretched by <code>RINGDOWN_TSCALE = 20</code>. The main
+      loop in <code>blackhole.js</code> adds this offset to the displayed radius
+      <code>rsShown</code> each frame; <code>onSwallow()</code> sets the amplitude
+      (larger for bigger meals) and even the hole&rsquo;s birth animation reuses it, growing
+      from zero with a ring.
+    </p>
+    <p data-lang="zh">
+      模式常数是 <code>src/physics.js</code> 里的
+      <code>QNM = { re: 0.37367, im: 0.08896 }</code>。
+      <code>ringdownOffset(tSec, rsPx, cPx, amp)</code> 用
+      <code>omega = QNM.re * cPx / (M * RINGDOWN_TSCALE)</code> 与
+      <code>tauD = M * RINGDOWN_TSCALE / (QNM.im * cPx)</code> 搭出阻尼余弦:
+      \( 1/M \) 与 \( M \) 两条标度原样保留,再被 <code>RINGDOWN_TSCALE = 20</code> 拉长。
+      <code>blackhole.js</code> 的主循环每帧把这个偏移加到展示半径 <code>rsShown</code> 上;
+      <code>onSwallow()</code> 设定振幅(饭越大,晃得越大),连黑洞的出生动画也复用它:
+      从零长起,带着一声铃。
+    </p>
+  </div>
+  <div class="blk" data-devour>
+    <p class="see" data-lang="en"><b>On the page</b> &mdash; right after each swallow the
+      shadow&rsquo;s rim breathes in and out a few times and settles; as the hole fattens,
+      listen with your eyes: the wobble gets slower and lingers longer.</p>
+    <p class="see" data-lang="zh"><b>你能看到</b> —— 每次吞噬后,影子的边缘呼吸般胀缩几下,
+      然后安定;黑洞越吃越胖,请用眼睛去听:晃动越来越慢,余音越拖越长。</p>
+  </div>
+</section>
+
+<section class="eq" id="eq9" aria-labelledby="eq9-title">
+  <div class="blk" data-devour>
+    <h2 id="eq9-title"><span class="eq-num">9</span><span data-lang="en">Bending light: weak lensing to the brink</span><span data-lang="zh">光线弯折:从弱透镜到悬崖边</span></h2>
+  </div>
+  <div class="eq-block" data-devour>
+  $$ \alpha(b) \approx \frac{2 r_s}{b} \quad (b \gg b_c), \qquad\quad
+     \alpha(b) \approx -\ln\!\left( \frac{b}{b_c} - 1 \right)
+     + \ln\!\bigl[ 216\,(7 - 4\sqrt{3}) \bigr] - \pi \quad (b \to b_c^{+}) $$
+  </div>
+  <div class="blk" data-devour>
+    <p data-lang="en">
+      A photon doesn&rsquo;t orbit or fall in the everyday sense; it grazes. Its whole
+      encounter with the hole is summarized by one number, the impact parameter \( b \)
+      (how far off-center it was aimed), and the geometry replies with one
+      number back, the deflection angle \( \alpha \). Far from the hole, the reply is the
+      celebrated weak-field result \( \alpha = 4GM/(c^2 b) = 2 r_s / b \): the 1.75
+      arcseconds Eddington confirmed at the 1919 eclipse, the formula that made Einstein a
+      headline.
+    </p>
+    <p data-lang="zh">
+      光子既不绕行也不坠落;按日常语义,它是擦过。它与黑洞的整场遭遇被一个数概括:
+      瞄准参数 \( b \)(瞄得偏离中心多远);几何也回敬一个数:偏折角 \( \alpha \)。
+      远离黑洞处,回答是那条著名的弱场结果 \( \alpha = 4GM/(c^2 b) = 2 r_s / b \):
+      爱丁顿在 1919 年日食测到的 1.75 角秒,让爱因斯坦登上头条的那条公式。
+    </p>
+  </div>
+  <div class="blk" data-devour>
+    <p data-lang="en">
+      Aim closer and politeness ends. As \( b \) approaches the critical value \( b_c \)
+      (equation 10), the photon whips through larger and larger angles (a U-turn, a
+      full loop, two loops), and the deflection diverges <em>logarithmically</em>:
+      each extra winding costs an exponentially finer adjustment of aim. Bozza&rsquo;s
+      strong-deflection expansion above captures this with a universal
+      \( -\ln(b/b_c - 1) \) plus a Schwarzschild-specific constant,
+      \( \ln[216(7 - 4\sqrt{3})] - \pi \approx -0.40 \). The divergence is why a black
+      hole&rsquo;s photon ring is theoretically an infinite stack of nested images of the
+      entire sky.
+    </p>
+    <p data-lang="zh">
+      瞄得再近些,客气就到头了。当 \( b \) 逼近临界值 \( b_c \)(方程 10),
+      光子甩过的角度越来越大(一个 U 形弯、一整圈、两圈),偏折按<em>对数</em>发散:
+      每多绕一圈,瞄准就要做指数级更精细的调整。上面 Bozza 的强偏折展开用一个普适的
+      \( -\ln(b/b_c - 1) \) 加一个史瓦西专属常数
+      \( \ln[216(7 - 4\sqrt{3})] - \pi \approx -0.40 \) 捕捉了这一切。
+      这个发散,正是黑洞光子环在理论上是"整个天空的无穷层嵌套镜像"的原因。
+    </p>
+  </div>
+  <figure class="fig" id="fig-deflection" data-devour>
+    <canvas id="defl-canvas" aria-label="Plot of photon deflection angle versus impact parameter, showing the weak-field curve and the strong-field logarithmic divergence at the critical impact parameter"></canvas>
+    <figcaption>
+      <span data-lang="en">
+      Figure 2 &mdash; deflection angle \( \alpha(b) \). Dashed blue: the weak-field
+      \( 2 r_s / b \), accurate at large \( b \). Solid orange: Bozza&rsquo;s strong-field
+      logarithm, accurate near the wall. The wall itself is
+      \( b_c = (3\sqrt{3}/2)\,r_s \approx 2.598\,r_s \): photons aimed inside it (shaded)
+      never come back, which is precisely the shadow. The shader approximates neither
+      regime: it integrates the exact geodesic per pixel, and this curve is what the
+      integration reproduces.
+      </span>
+      <span data-lang="zh">
+      图 2 —— 偏折角 \( \alpha(b) \)。蓝色虚线:弱场公式 \( 2 r_s / b \),在大 \( b \)
+      处准确。橙色实线:Bozza 的强场对数,在"墙"附近准确。墙本身就是
+      \( b_c = (3\sqrt{3}/2)\,r_s \approx 2.598\,r_s \):瞄进它内侧的光子(阴影区)
+      一去不返,那正是黑影。着色器对这两个区间都不做近似:它逐像素积分精确测地线,
+      而这条曲线正是积分复现出来的东西。
+      </span>
+    </figcaption>
+  </figure>
+  <div class="code-box" data-devour>
+    <span class="box-title"><span data-lang="en">In the code</span><span data-lang="zh">代码里</span></span>
+    <p data-lang="en">
+      In the fragment shader in <code>src/renderer.js</code>, every pixel within an impact
+      radius of \( 20M \) launches a ray from an orthographic camera (inclination
+      <code>u_tilt</code>, default 1.35&nbsp;rad &asymp; 77&deg;) and integrates the exact
+      null geodesic <em>backward</em>: in \( M = 1 \) units,
+      \( d^2\mathbf{x}/d\lambda^2 = -3M h^2\, \mathbf{x}/r^5 \) with
+      \( h = |\mathbf{x} \times \mathbf{v}| \) conserved, the vector form of the
+      Binet equation \( u'' + u = 3Mu^2 \). The march takes up to <code>MAXSTEP = 168</code>
+      semi-implicit Euler steps of adaptive length <code>dl = 0.22*r/(1.0 + 8.0/r)</code>
+      (fine near the hole, coarse far away). A ray that escapes past \( 44M \) samples the
+      procedural starfield along its final bent direction,
+      <code>skyColor(normalize(v))</code>. That is lensing done the honest way: no
+      displacement map, just where the ray actually ends up pointing. Pixels beyond
+      \( 20M \) take a cheap path built from exactly this section&rsquo;s weak-field
+      formula, <code>defl = 4.0 / b</code> (that is \( 4M/b = 2 r_s / b \)).
+    </p>
+    <p data-lang="zh">
+      在 <code>src/renderer.js</code> 的片元着色器里,瞄准半径 \( 20M \) 以内的每个像素
+      都从一台正交相机(倾角 <code>u_tilt</code>,默认 1.35&nbsp;rad &asymp; 77&deg;)
+      发出一条光线,<em>向后</em>积分精确零测地线:在 \( M = 1 \) 单位下,
+      \( d^2\mathbf{x}/d\lambda^2 = -3M h^2\, \mathbf{x}/r^5 \),其中
+      \( h = |\mathbf{x} \times \mathbf{v}| \) 守恒,正是 Binet 方程
+      \( u'' + u = 3Mu^2 \) 的矢量形式。行进至多走 <code>MAXSTEP = 168</code> 个半隐式欧拉步,
+      步长自适应 <code>dl = 0.22*r/(1.0 + 8.0/r)</code>(近处细,远处粗)。
+      逃出 \( 44M \) 的光线,沿它最终被弯过的方向采样程序化星空,
+      <code>skyColor(normalize(v))</code>。这就是最诚实的透镜做法:没有位移贴图,
+      只有光线真正指向的地方。\( 20M \) 以外的像素走一条便宜路径,
+      用的恰是本节的弱场公式,<code>defl = 4.0 / b</code>(即 \( 4M/b = 2 r_s / b \))。
+    </p>
+  </div>
+  <div class="blk" data-devour>
+    <p class="see" data-lang="en"><b>On the page</b> &mdash; stars near the hole are visibly
+      dragged outward and brighten into an arc-like crowd just outside the ring; the closer
+      to the shadow, the stronger the smear.</p>
+    <p class="see" data-lang="zh"><b>你能看到</b> —— 靠近黑洞的星星被肉眼可见地向外拖拽,
+      在环外挤成一圈弧光;离影子越近,涂抹越重。</p>
+  </div>
+</section>
+
+<section class="eq" id="eq10" aria-labelledby="eq10-title">
+  <div class="blk" data-devour>
+    <h2 id="eq10-title"><span class="eq-num">10</span><span data-lang="en">The photon sphere and the shadow</span><span data-lang="zh">光子球与黑影</span></h2>
+  </div>
+  <div class="eq-block" data-devour>
+  $$ r_{\mathrm{ph}} = \tfrac{3}{2}\, r_s, \qquad\quad
+     b_c = \frac{3\sqrt{3}}{2}\, r_s \approx 2.598\, r_s $$
+  </div>
+  <div class="blk" data-devour>
+    <p data-lang="en">
+      At one and a half Schwarzschild radii, light can do the most literal thing imaginable:
+      orbit. The photon sphere is the radius where the geometry bends a photon&rsquo;s path
+      into a perfect circle. The orbit is unstable: a photon there is a pencil
+      balanced on its tip, one nudge from spiraling in or escaping. It is not the point
+      of no return for light: that is the horizon. What it sets is the capture threshold
+      for incoming rays, aim inside the matching impact parameter and there is no return,
+      and with it the most photographed property of black holes.
+    </p>
+    <p data-lang="zh">
+      在一点五个史瓦西半径处,光可以做一件最字面意义的事:绕圈。光子球就是几何把光子路径
+      弯成正圆的那个半径。这条轨道不稳定:待在那里的光子像笔尖上立着的铅笔,
+      一碰就要么盘旋坠入要么逃逸。它并不是光的不归界,那是视界的事;
+      它定下的,是入射光的俘获门槛:瞄进对应的瞄准距离以内,光便有去无回,
+      黑洞被拍得最多的那个性质也随之而来。
+    </p>
+  </div>
+  <div class="blk" data-devour>
+    <p data-lang="en">
+      Here is the delightful subtlety: the black disk you <em>see</em> is not the horizon.
+      A photon skimming the photon sphere at \( r_{\mathrm{ph}} = 1.5\,r_s \) climbs out
+      through curved space. The aiming distance a distant observer attributes to it is
+      inflated by the redshift factor there:
+      \( b_c = r_{\mathrm{ph}} / \sqrt{f(r_{\mathrm{ph}})} = 1.5\,r_s / \sqrt{1/3}
+      = (3\sqrt{3}/2)\, r_s \). The shadow is 2.6&times; wider than the horizon:
+      gravity operating as its own magnifying glass. The Event Horizon Telescope&rsquo;s
+      images of M87* and Sgr&nbsp;A* show essentially this \( b_c \), ringed by the photon
+      pile-up of equation 9.
+    </p>
+    <p data-lang="zh">
+      妙处在这里:你<em>看到</em>的黑盘并不是视界。贴着光子球
+      \( r_{\mathrm{ph}} = 1.5\,r_s \) 掠过的光子,要穿过弯曲空间爬出来。
+      远方观察者归给它的瞄准距离,被当地的红移因子放大:
+      \( b_c = r_{\mathrm{ph}} / \sqrt{f(r_{\mathrm{ph}})} = 1.5\,r_s / \sqrt{1/3}
+      = (3\sqrt{3}/2)\, r_s \)。黑影比视界宽 2.6 倍:引力当了自己的放大镜。
+      事件视界望远镜拍下的 M87* 与人马座 A*,显示的大致正是这个 \( b_c \),
+      外面箍着方程 9 堆起来的光子。
+    </p>
+  </div>
+  <div class="code-box" data-devour>
+    <span class="box-title"><span data-lang="en">In the code</span><span data-lang="zh">代码里</span></span>
+    <p data-lang="en">
+      Nothing in the shader draws the shadow. A backward ray that dips below
+      \( r = 2.02M \) (<code>R_HORIZON</code> with a 1% pad) is flagged captured and
+      composited pure black; a ray that exhausts its <code>MAXSTEP</code> budget is counted
+      captured too, since only near-critical rays winding at the photon sphere can burn 168
+      steps, and that is precisely the shadow&rsquo;s edge. Measure the black disk on
+      screen and you get \( b_c = (3\sqrt{3}/2)\,r_s \) to within a few pixels: it
+      <em>emerges</em> from the integration. So does the photon ring, as
+      near-critical rays cross the disk plane again and again, piling its light into a thin
+      bright band. <code>bCrit(rs)</code> in <code>src/physics.js</code> survives as the
+      theory value, still drawn explicitly by the ray-tracer-less 2D fallback. Even the
+      shader&rsquo;s ambient glow is centered at \( 5.196M \): recognize
+      \( 3\sqrt{3} \).
+    </p>
+    <p data-lang="zh">
+      着色器里没有任何一行在"画"影子。向后追踪的光线一旦跌破 \( r = 2.02M \)
+      (<code>R_HORIZON</code> 加 1% 余量)就被标记为俘获,合成为纯黑;
+      耗尽 <code>MAXSTEP</code> 步数预算的光线同样按俘获计,因为只有在光子球上缠绕的
+      近临界光线才烧得掉 168 步,而那恰好就是影子的边缘。在屏幕上量那个黑盘,
+      你会得到误差仅几个像素的 \( b_c = (3\sqrt{3}/2)\,r_s \):它是从积分里<em>长出来</em>的。
+      光子环也一样:近临界光线一次次穿过盘面,把盘光叠成一条细亮带。
+      <code>src/physics.js</code> 里的 <code>bCrit(rs)</code> 作为理论值幸存,
+      仍由不带光线追踪的 2D 降级显式画出。连着色器的环境辉光都定心在 \( 5.196M \):
+      认出来了吗,\( 3\sqrt{3} \)。
+    </p>
+  </div>
+  <div class="blk" data-devour>
+    <p class="see" data-lang="en"><b>On the page</b> &mdash; the black disk in the corner
+      <em>is</em> \( b_c \), not \( r_s \): the actual horizon would fit well inside it, and
+      the thin white-hot ring hugging its edge marks the light that almost stayed forever.</p>
+    <p class="see" data-lang="zh"><b>你能看到</b> —— 角落里那个黑盘<em>就是</em> \( b_c \),
+      不是 \( r_s \):真正的视界能整个装进它里面;贴着盘缘的白热细环,
+      标记着那些差一点就永远留下的光。</p>
+  </div>
+</section>
+
+<section class="eq" id="eq11" aria-labelledby="eq11-title">
+  <div class="blk" data-devour>
+    <h2 id="eq11-title"><span class="eq-num">11</span><span data-lang="en">The accretion disk: a thermometer in orbit</span><span data-lang="zh">吸积盘:在轨道上的温度计</span></h2>
+  </div>
+  <div class="eq-block" data-devour>
+  $$ T(r) \propto \left[ \frac{1 - \sqrt{r_{\mathrm{isco}} / r}}{r^3} \right]^{1/4},
+     \qquad r_{\mathrm{isco}} = 3\, r_s, \qquad
+     \Omega(r) = \sqrt{\frac{M}{r^3}} $$
+  </div>
+  <div class="blk" data-devour>
+    <p data-lang="en">
+      Matter rarely falls straight in; it has angular momentum to lose, so it queues. The
+      queue is the accretion disk: gas spiraling gradually inward, rubbing against itself,
+      converting orbital energy into heat and light. Shakura and Sunyaev&rsquo;s 1973
+      thin-disk model (one of the most-cited papers in astrophysics) gives the
+      surface temperature profile above. Far out it falls as \( r^{-3/4} \); at the inner
+      edge the \( 1 - \sqrt{r_{\mathrm{isco}}/r} \) factor (a no-torque boundary condition)
+      drags it to zero; in between it peaks at \( r = \tfrac{49}{36}\, r_{\mathrm{isco}}
+      \approx 1.36\, r_{\mathrm{isco}} \). Hottest, whitest light comes not from the
+      innermost gas but from a ring just outside it.
+    </p>
+    <p data-lang="zh">
+      物质很少笔直坠入;它有角动量要卸,所以要排队。这条队就是吸积盘:
+      气体缓缓盘旋内移,自我摩擦,把轨道能变成热与光。Shakura 与 Sunyaev 1973 年的薄盘模型
+      (天体物理引用量最高的论文之一),给出上面的表面温度轮廓。远处按 \( r^{-3/4} \)
+      下降;内缘处 \( 1 - \sqrt{r_{\mathrm{isco}}/r} \) 因子(无力矩边界条件)把它拽到零;
+      中间在 \( r = \tfrac{49}{36}\, r_{\mathrm{isco}} \approx 1.36\, r_{\mathrm{isco}} \)
+      处到达峰值。最热最白的光不是来自最内侧的气体,而是来自紧挨其外的一圈。
+    </p>
+  </div>
+  <div class="blk" data-devour>
+    <p data-lang="en">
+      Why does the disk stop at \( 3\,r_s = 6M \)? That is equation 2&rsquo;s doing: the
+      ISCO, the innermost stable circular orbit, where the effective potential&rsquo;s
+      valley flattens away (Figure 1). Inside it, no amount of angular momentum buys a
+      stable circle, so gas reaching the ISCO simply lets go and plunges. The disk
+      truncates with a clean edge. And the rotation law is a genuine surprise of
+      Schwarzschild geometry: the angular velocity of circular orbits, measured in
+      coordinate time, is <em>exactly</em> Kepler&rsquo;s \( \Omega = \sqrt{M/r^3} \), no
+      relativistic correction at all. Inner gas laps outer gas, shearing any pattern into
+      differential swirls.
+    </p>
+    <p data-lang="zh">
+      盘为什么停在 \( 3\,r_s = 6M \)?那是方程 2 干的:ISCO,最内稳定圆轨道,
+      有效势的山谷在那里被抹平(图 1)。再往里,多大的角动量都买不到一个稳定的圆,
+      抵达 ISCO 的气体干脆松手坠落。盘于是带着一条干净的边缘截断。
+      而旋转定律是史瓦西几何一个货真价实的惊喜:圆轨道的角速度,按坐标时间量,
+      <em>恰好</em>就是开普勒的 \( \Omega = \sqrt{M/r^3} \),一点相对论修正都没有。
+      内圈气体一圈圈超过外圈,把任何图案剪切成差速的涡旋。
+    </p>
+  </div>
+  <div class="code-box" data-devour>
+    <span class="box-title"><span data-lang="en">In the code</span><span data-lang="zh">代码里</span></span>
+    <p data-lang="en">
+      <code>isco(rs)</code> returns <code>3 * rs</code> in <code>src/physics.js</code>. In
+      the shader, <code>diskTemp(r)</code> evaluates the bracketed profile in \( M = 1 \)
+      units (inner edge <code>DISK_IN = 6.0</code>, i.e. \( 3\,r_s \); outer
+      <code>DISK_OUT = 13.0</code>), normalized by its own peak;
+      <code>blackbodyRamp()</code> maps it red &rarr; orange &rarr; overexposed white. Each
+      backward ray that crosses the disk plane between those radii calls
+      <code>diskEmission()</code>. Because bent rays cross the plane more than
+      once, the disk appears more than once: the direct image, plus the arcs over and under
+      the shadow, which are the <em>far side</em> of the disk seen above and below the hole.
+      (The <i>Interstellar</i> look, for exactly the <i>Interstellar</i> reason.) Emission
+      is weighted by a circular-orbit emitter&rsquo;s
+      \( g = \sqrt{1 - 3M/r}\,\big/\,(1 - \beta\mu) \), with
+      <code>beta = inversesqrt(max(rd - 2.0, 0.25))</code> (the local orbital speed
+      \( 1/\sqrt{r - 2} \), an even \( 0.5c \) at the ISCO) and \( \mu \) the cosine
+      between the Keplerian flow and the photon direction. Observed brightness goes as
+      <code>pow(g, 3.0)</code>. The turbulent texture is <code>fbm</code> noise
+      counter-rotated at the exact \( \Omega = r^{-3/2} \): real differential
+      rotation, artistically slowed by <code>DISK_SPEED = 0.35</code>.
+    </p>
+    <p data-lang="zh">
+      <code>src/physics.js</code> 里的 <code>isco(rs)</code> 返回 <code>3 * rs</code>。
+      在着色器里,<code>diskTemp(r)</code> 用 \( M = 1 \) 单位求方括号里的轮廓
+      (内缘 <code>DISK_IN = 6.0</code>,即 \( 3\,r_s \);外缘 <code>DISK_OUT = 13.0</code>),
+      按自身峰值归一;<code>blackbodyRamp()</code> 把它映射成红 &rarr; 橙 &rarr; 过曝的白。
+      每条在这段半径间穿过盘面的向后光线都会调用 <code>diskEmission()</code>。
+      由于弯曲的光线会不止一次穿过盘面,盘也不止出现一次:直接像,
+      加上攀在影子上下的弧,那是从黑洞上方与下方看到的盘的<em>远侧</em>。
+      (《星际穿越》的样子,出于和《星际穿越》一模一样的理由。)发射按圆轨道发射体的
+      \( g = \sqrt{1 - 3M/r}\,\big/\,(1 - \beta\mu) \) 加权,其中
+      <code>beta = inversesqrt(max(rd - 2.0, 0.25))</code>(局部轨道速度 \( 1/\sqrt{r - 2} \),
+      在 ISCO 处整整 \( 0.5c \)),\( \mu \) 是开普勒流与光子方向的夹角余弦;
+      观测亮度按 <code>pow(g, 3.0)</code>。湍流纹理是以精确的 \( \Omega = r^{-3/2} \)
+      反向旋转的 <code>fbm</code> 噪声:真实的差速旋转,被 <code>DISK_SPEED = 0.35</code>
+      艺术性放慢。
+    </p>
+  </div>
+  <div class="blk" data-devour>
+    <p class="see" data-lang="en"><b>On the page</b> &mdash; the tilted disk begins abruptly
+      at \( r = 3\,r_s \); the side orbiting toward you blazes white while the receding side
+      smolders (that is \( g^3 \)); the arcs hugging the shadow&rsquo;s top and bottom are
+      the disk&rsquo;s far side, bent over and under the hole; and the streaks visibly
+      shear, inner filaments overtaking outer ones lap after lap.</p>
+    <p class="see" data-lang="zh"><b>你能看到</b> —— 倾斜的盘在 \( r = 3\,r_s \) 处戛然开始;
+      朝你转来的一侧白热刺眼,退行的一侧闷燃(那就是 \( g^3 \));
+      抱着影子上下的弧,是被弯过黑洞的盘的远侧;条纹肉眼可见地剪切,
+      内圈的丝缕一圈又一圈超过外圈。</p>
+  </div>
+</section>
+
+<section class="eq" id="eq12" aria-labelledby="eq12-title">
+  <div class="blk" data-devour>
+    <h2 id="eq12-title"><span class="eq-num">12</span><span data-lang="en">Accretion flares: dinner, converted to light</span><span data-lang="zh">吸积耀发:晚餐变成光</span></h2>
+  </div>
+  <div class="eq-block" data-devour>
+  $$ L_{\mathrm{flare}} \;=\; \eta\, \dot m\, c^2, \qquad
+     \eta \;=\; 1 - \sqrt{\tfrac{8}{9}} \;\approx\; 0.057 $$
+  </div>
+  <div class="blk" data-devour>
+    <p data-lang="en">
+      Accretion is the most efficient furnace in the universe short of
+      matter&ndash;antimatter annihilation. Hydrogen fusion (the Sun&rsquo;s entire
+      business model) liberates 0.7% of rest mass. Matter spiraling down to a
+      Schwarzschild hole&rsquo;s ISCO releases 5.7%: eight times better. That number
+      isn&rsquo;t an engineering estimate; it falls straight out of equation 2. A particle
+      parked on the ISCO has conserved energy \( E_{\mathrm{isco}} = \sqrt{8/9} \) of its
+      rest mass. The journey from far away down to the last stable orbit must therefore
+      have radiated the difference, \( \eta = 1 - \sqrt{8/9} \). This is why quasars
+      (black holes eating a few solar masses a year) outshine their entire host
+      galaxies.
+    </p>
+    <p data-lang="zh">
+      吸积是宇宙里仅次于正反物质湮灭的最高效熔炉。氢聚变(太阳的全部商业模式)
+      释放静质量的 0.7%。而盘旋落到史瓦西黑洞 ISCO 的物质释放 5.7%:高出八倍。
+      这个数不是工程估算,它直接从方程 2 里掉出来:停在 ISCO 上的粒子,
+      守恒能量是其静质量的 \( E_{\mathrm{isco}} = \sqrt{8/9} \)。
+      那么从远方一路降到最后稳定轨道的旅程,必然辐射掉了差额
+      \( \eta = 1 - \sqrt{8/9} \)。这就是类星体(每年吃几个太阳质量的黑洞)
+      光芒盖过整个宿主星系的原因。
+    </p>
+  </div>
+  <div class="blk" data-devour>
+    <p data-lang="en">
+      The demo honors the spirit at page scale: each swallowed element is a parcel of mass,
+      a spike in \( \dot m \), and its arrival buys a pulse of disk luminosity proportional to the
+      parcel&rsquo;s mass: bigger blocks, brighter flares. The pulse then relaxes
+      exponentially, the way a real accretion transient decays as the extra matter drains
+      through the disk.
+    </p>
+    <p data-lang="zh">
+      演示在页面尺度上致敬这套精神:每个被吞的元素都是一小包质量,是 \( \dot m \) 上的一次尖峰,
+      它的到账换来一脉冲盘面光度,与包裹的质量成正比:块越大,耀发越亮。
+      随后脉冲按指数松弛,就像真实的吸积暂现源那样,随多余物质排空盘面而衰减。
+    </p>
+  </div>
+  <div class="code-box" data-devour>
+    <span class="box-title"><span data-lang="en">In the code</span><span data-lang="zh">代码里</span></span>
+    <p data-lang="en">
+      The efficiency is exported as <code>ETA_ISCO = 1 - Math.sqrt(8/9)</code> in
+      <code>src/physics.js</code>. In <code>blackhole.js</code>, <code>onSwallow(area)</code>
+      kicks the flare state: <code>flare = min(1, flare + 0.35 + area/90000)</code>
+      (amplitude growing with the swallowed mass), and the frame loop decays it with
+      <code>flare *= exp(-dt/0.8)</code>. The renderer receives it as the uniform
+      <code>u_flare</code>: <code>diskEmission()</code> multiplies its brightness by
+      <code>1.0 + 3.0*u_flare</code> and the ambient glow scales with it too. The
+      photon ring, being made of ray-traced disk light, surges on its own.
+    </p>
+    <p data-lang="zh">
+      效率以 <code>ETA_ISCO = 1 - Math.sqrt(8/9)</code> 导出在 <code>src/physics.js</code>。
+      在 <code>blackhole.js</code> 里,<code>onSwallow(area)</code> 踢一脚耀发状态:
+      <code>flare = min(1, flare + 0.35 + area/90000)</code>(振幅随吞下的质量增长),
+      帧循环再用 <code>flare *= exp(-dt/0.8)</code> 让它衰减。渲染器以 uniform
+      <code>u_flare</code> 接收:<code>diskEmission()</code> 把亮度乘上
+      <code>1.0 + 3.0*u_flare</code>,环境辉光也随之缩放。光子环由光线追踪的盘光构成,
+      于是自己就会跟着涌亮。
+    </p>
+  </div>
+  <div class="blk" data-devour>
+    <p class="see" data-lang="en"><b>On the page</b> &mdash; the instant a block dies, the
+      disk and ring surge bright and relax over a second or so; sacrifice a big card and the
+      flash noticeably outclasses a nibbled list item.</p>
+    <p class="see" data-lang="zh"><b>你能看到</b> —— 块死去的那一瞬,盘和环猛地增亮,
+      又在一秒上下松弛回去;献祭一大块内容,闪光会明显盖过啃掉的一小行。</p>
+  </div>
+</section>
+
+<section class="eq" id="eq13" aria-labelledby="eq13-title">
+  <div class="blk" data-devour>
+    <h2 id="eq13-title"><span class="eq-num">13</span><span data-lang="en">The cost of hovering</span><span data-lang="zh">悬停的代价</span></h2>
+  </div>
+  <div class="eq-block" data-devour>
+  $$ a(r) \;=\; \frac{M}{r^2 \sqrt{f(r)}} $$
+  </div>
+  <div class="blk" data-devour>
+    <p data-lang="en">
+      Standing still is not free near a black hole. In Newton&rsquo;s world, hovering at
+      radius \( r \) costs thrust \( M/r^2 \), full stop. In Schwarzschild geometry the bill
+      acquires a \( 1/\sqrt{f} \) surcharge. That changes everything, because the surcharge
+      <em>diverges</em> at the horizon. At \( r = 1.33\,r_s \) hovering costs double Newton;
+      at \( 1.01\,r_s \), ten times; at the horizon, no finite rocket, no engine of any
+      power, can hold position. The horizon isn&rsquo;t where gravity becomes strong so much
+      as where <em>staying put stops being a thing the universe offers</em>.
+    </p>
+    <p data-lang="zh">
+      在黑洞附近,原地不动不是免费的。牛顿的世界里,悬停在半径 \( r \) 花费推力
+      \( M/r^2 \),仅此而已。史瓦西几何给账单加了一笔 \( 1/\sqrt{f} \) 的附加费。
+      这改变了一切,因为这笔附加费在视界处<em>发散</em>。在 \( r = 1.33\,r_s \),
+      悬停要花牛顿的两倍;在 \( 1.01\,r_s \),十倍;到了视界,任何有限的火箭、
+      任何功率的引擎,都保不住位置。与其说视界是引力变强的地方,
+      不如说是<em>"待在原地"从宇宙的选项里下架的地方</em>。
+    </p>
+  </div>
+  <div class="blk" data-devour>
+    <p data-lang="en">
+      While you drag an element, you are that rocket. The cursor pins the element against
+      gravity, and the demo lets you feel the bill: a displacement bias toward the hole,
+      proportional to the true hover acceleration (capped, because your monitor has edges
+      and your patience has limits). Far away it&rsquo;s imperceptible; skim the shadow and
+      the element strains against your grip like a fish on a line.
+    </p>
+    <p data-lang="zh">
+      当你拖着一个元素,你就是那枚火箭。光标把元素钉在引力之上,而演示让你摸到这张账单:
+      一个朝向黑洞的位移偏置,正比于真实的悬停加速度(有上限,因为你的显示器有边,
+      你的耐心也有)。离得远时难以察觉;贴着影子掠过,元素就像上了钩的鱼一样挣你的手。
+    </p>
+  </div>
+  <div class="code-box" data-devour>
+    <span class="box-title"><span data-lang="en">In the code</span><span data-lang="zh">代码里</span></span>
+    <p data-lang="en">
+      <code>hoverAccel(r, rs)</code> in <code>src/physics.js</code> computes
+      <code>(rs/2) / (r*r*Math.sqrt(f))</code>, with a guard for \( f \le 10^{-4} \) since
+      the true value diverges. In <code>interaction.js</code>, the drag branch of
+      <code>tick()</code> converts it to pixels of tug:
+      <code>pull = min(hoverAccel(dist, rs) * PULL_GAIN, PULL_MAX)</code>
+      (gain 900, cap 26&nbsp;px), applied along the unit vector toward the hole&rsquo;s
+      center, with the distance floored at \( 1.05\,r_s \).
+    </p>
+    <p data-lang="zh">
+      <code>src/physics.js</code> 里的 <code>hoverAccel(r, rs)</code> 计算
+      <code>(rs/2) / (r*r*Math.sqrt(f))</code>,并对 \( f \le 10^{-4} \) 设了护栏,
+      因为真值是发散的。在 <code>interaction.js</code> 里,<code>tick()</code> 的拖拽分支
+      把它换算成像素级的拽力:<code>pull = min(hoverAccel(dist, rs) * PULL_GAIN, PULL_MAX)</code>
+      (增益 900,上限 26&nbsp;px),沿指向黑洞中心的单位向量施加,
+      距离下限取 \( 1.05\,r_s \)。
+    </p>
+  </div>
+  <div class="blk" data-devour>
+    <p class="see" data-lang="en"><b>On the page</b> &mdash; a dragged block leans toward the
+      hole; the closer you carry it, the harder it pulls off-cursor, a haptic rendering of
+      &ldquo;you cannot hover at the horizon.&rdquo;</p>
+    <p class="see" data-lang="zh"><b>你能看到</b> —— 被拖拽的块朝黑洞倾身;你把它带得越近,
+      它挣脱光标的力道越大:一次"视界处无法悬停"的触觉渲染。</p>
+  </div>
+</section>
+
+<section class="eq" id="eq14" aria-labelledby="eq14-title">
+  <div class="blk" data-devour>
+    <h2 id="eq14-title"><span class="eq-num">14</span><span data-lang="en">Radiation drag: the honest thumb on the scale</span><span data-lang="zh">辐射阻尼:坦白按在秤上的拇指</span></h2>
+  </div>
+  <div class="eq-block" data-devour>
+  $$ \mathbf{a}_{\mathrm{drag}} \;=\; -\,\kappa \left( \frac{v_{\mathrm{loc}}}{c} \right)^{\!4} \mathbf{v} $$
+  </div>
+  <div class="blk" data-devour>
+    <p data-lang="en">
+      Pure geodesic motion has a gameplay flaw: it is too good. A test particle thrown onto
+      a bound orbit outside the ISCO will, in exact Schwarzschild physics, orbit until the
+      end of time. Your headline would precess forever, never feeding the hole. Real
+      binaries escape this fate because orbiting masses radiate gravitational waves,
+      bleeding energy until they merge. That dissipation enters the post-Newtonian expansion
+      at the famous 2.5PN order, a first correction suppressed by \( (v/c)^5 \).
+      It is precisely what made the Hulse&ndash;Taylor pulsar&rsquo;s orbit
+      shrink on schedule and LIGO&rsquo;s chirps chirp.
+    </p>
+    <p data-lang="zh">
+      纯测地线运动有个游戏性缺陷:它太完美了。被甩上 ISCO 之外束缚轨道的试验粒子,
+      在精确的史瓦西物理里会一直绕到时间尽头。你的标题会永远进动下去,永远喂不进黑洞。
+      真实的双星逃过这个命运,是因为互绕的质量辐射引力波,失血般漏掉能量直到并合。
+      这份耗散在后牛顿展开中出现在著名的 2.5PN 阶,是被 \( (v/c)^5 \) 压低的首个修正。
+      正是它让赫尔斯–泰勒脉冲双星的轨道如期收缩,让 LIGO 的啁啾得以啁啾。
+    </p>
+  </div>
+  <div class="blk" data-devour>
+    <p data-lang="en">
+      But a <code>&lt;div&gt;</code>&rsquo;s self-gravitational-wave emission is, let us
+      say, below the noise floor. So the demo adds a phenomenological drag with the same
+      moral character: an acceleration opposing the velocity, switched on steeply,
+      as the fourth power of the <em>locally measured</em> speed. Slow,
+      distant orbits are essentially untouched; fast, tight ones decay in a few laps.
+      To be clear, and the honesty box says it too: this is a gameplay term <em>inspired
+      by</em> the 2.5PN scaling, not derived from it. Its one design goal is that every
+      orbit is ultimately a spiral.
+    </p>
+    <p data-lang="zh">
+      可一个 <code>&lt;div&gt;</code> 的自发引力波辐射,委婉地说,在噪声底之下。
+      于是演示加了一项唯象阻尼,道德品格与之相同:一个与速度反向的加速度,
+      以<em>局部测得</em>速度的四次方陡峭开启。慢而远的轨道几乎不受打扰;
+      快而紧的轨道几圈内衰亡。说清楚(诚实清单里也写着):这是一个<em>受</em>
+      2.5PN 标度<em>启发</em>的游戏项,不是从它推导出来的。它唯一的设计目标是:
+      每条轨道终究是一条螺线。
+    </p>
+  </div>
+  <div class="code-box" data-devour>
+    <span class="box-title"><span data-lang="en">In the code</span><span data-lang="zh">代码里</span></span>
+    <p data-lang="en">
+      Inside <code>stepBody()</code> in <code>src/physics.js</code>: when
+      <code>dragK &gt; 0</code>, each substep computes <code>v = localSpeed(body, rs)</code>
+      (the static-observer speed \( \sqrt{1 - f/E^2} \)) and multiplies both
+      momenta by <code>d = max(0, 1 - dragK * v^4 * dtau)</code>:
+      <code>body.pr *= d; body.L *= d</code>. It then re-derives the stored energy via
+      <code>energyOf()</code>, since drag is one of only two processes allowed to touch
+      the conserved \( E \) (the other being a fattening hole, handled adiabatically). The
+      knob is <code>dragK</code> (default <code>2.0</code> in
+      <code>blackhole.js</code>&rsquo;s <code>DEFAULTS</code>); set it to <code>0</code>
+      and you get pure, eternal geodesics.
+    </p>
+    <p data-lang="zh">
+      在 <code>src/physics.js</code> 的 <code>stepBody()</code> 内部:当
+      <code>dragK &gt; 0</code>,每个子步计算 <code>v = localSpeed(body, rs)</code>
+      (静止观察者速度 \( \sqrt{1 - f/E^2} \)),再把两个动量同乘
+      <code>d = max(0, 1 - dragK * v^4 * dtau)</code>:
+      <code>body.pr *= d; body.L *= d</code>。然后经 <code>energyOf()</code> 重新导出
+      所存的能量,因为阻尼是仅有的两个获准触碰守恒量 \( E \) 的过程之一
+      (另一个是变胖的黑洞,按绝热处理)。旋钮是 <code>dragK</code>
+      (<code>blackhole.js</code> 的 <code>DEFAULTS</code> 里默认 <code>2.0</code>);
+      调成 <code>0</code>,你就得到纯粹而永恒的测地线。
+    </p>
+  </div>
+  <div class="blk" data-devour>
+    <p class="see" data-lang="en"><b>On the page</b> &mdash; orbits that would circle
+      indefinitely tighten a little each pass, imperceptibly at first, then decisively;
+      every thrown element&rsquo;s story ends at the shadow.</p>
+    <p class="see" data-lang="zh"><b>你能看到</b> —— 本可无限绕转的轨道每一圈都收紧一点,
+      起初难以察觉,继而不容分说;每个被甩出的元素,故事都终结在影子上。</p>
+  </div>
+</section>
+
+<section class="eq" id="eq15" aria-labelledby="eq15-title">
+  <div class="blk" data-devour>
+    <h2 id="eq15-title"><span class="eq-num">15</span><span data-lang="en">Entropy: the hole is a hard drive</span><span data-lang="zh">熵:黑洞是一块硬盘</span></h2>
+  </div>
+  <div class="eq-block" data-devour>
+  $$ S \;=\; \frac{k_B\, c^3 A}{4 G \hbar} \;=\; k_B\, \frac{A}{4\,\ell_P^2},
+     \qquad\quad
+     \frac{S}{k_B \ln 2} \;=\; \frac{\pi\, r_s^2}{\ell_P^2 \ln 2} \ \text{bits} $$
+  </div>
+  <div class="blk" data-devour>
+    <p data-lang="en">
+      The strangest fact on this page: a black hole&rsquo;s entropy (its information
+      capacity, the count of microscopic ways to be that exact hole) scales with its
+      surface <em>area</em>, not its volume. Bekenstein conjectured it from thought
+      experiments about hiding entropy behind horizons. Hawking&rsquo;s discovery of black
+      hole radiation fixed the coefficient at exactly one quarter of the area in Planck
+      units, \( \ell_P^2 = G\hbar/c^3 \approx (1.6 \times 10^{-35}\,\mathrm{m})^2 \). Every
+      quantum-gravity candidate is judged against this formula. Its area scaling seeded
+      the holographic principle: the suspicion that everything inside a region is
+      describable on its boundary. As storage, it reads: roughly one bit per
+      \( 4 \ln 2 \) Planck areas of horizon. There is no denser way to pack information;
+      a black hole is the thermodynamic limit of a hard drive.
+    </p>
+    <p data-lang="zh">
+      本页最古怪的事实:黑洞的熵(它的信息容量,"成为这颗黑洞"的微观方式的数目),
+      正比于它的表面<em>积</em>,而不是体积。贝肯斯坦从"把熵藏进视界"的思想实验里猜到了它。
+      霍金发现黑洞辐射后,把系数钉死在普朗克单位下面积的恰好四分之一,
+      \( \ell_P^2 = G\hbar/c^3 \approx (1.6 \times 10^{-35}\,\mathrm{m})^2 \)。
+      每个量子引力候选理论都要拿这条公式来审。它的面积标度还播下了全息原理的种子:
+      那个"区域内的一切都可以写在边界上"的怀疑。当成存储器来读:
+      视界每 \( 4 \ln 2 \) 个普朗克面积,约存一比特。没有比这更稠密的信息打包方式;
+      黑洞是硬盘的热力学极限。
+    </p>
+  </div>
+  <div class="blk" data-devour>
+    <p data-lang="en">
+      The demo&rsquo;s HUD runs the number as a wink. Declare 1&nbsp;px&nbsp;=&nbsp;1 Planck
+      length (a lie of a mere thirty-odd orders of magnitude), and the equatorial-plane
+      formula gives \( S / (k_B \ln 2) = \pi r_s^2 / \ln 2 \) bits for a horizon of radius
+      \( r_s \) pixels. The starting 16-px hole &ldquo;stores&rdquo; about 1.2&nbsp;kbit;
+      swallow the whole page and it climbs roughly a hundredfold, toward the megabit
+      mark, growing monotonically as thermodynamics insists. Your deleted content is not gone, merely
+      <em>very</em> well encrypted.
+    </p>
+    <p data-lang="zh">
+      演示的 HUD 把这个数当彩蛋来算。宣布 1&nbsp;px&nbsp;=&nbsp;1 普朗克长度
+      (只撒了三十来个数量级的谎),赤道面公式便给出:半径 \( r_s \) 像素的视界,
+      存有 \( S / (k_B \ln 2) = \pi r_s^2 / \ln 2 \) 比特。开局 16 px 的黑洞"存储"约
+      1.2&nbsp;kbit;吞掉整个页面,它会涨上约百倍、直逼兆比特,如热力学所坚持的那样单调增长。
+      你被删掉的内容并没有消失,只是被<em>非常</em>妥善地加了密。
+    </p>
+  </div>
+  <div class="code-box" data-devour>
+    <span class="box-title"><span data-lang="en">In the code</span><span data-lang="zh">代码里</span></span>
+    <p data-lang="en">
+      The HUD entropy row lives in <code>src/hud.js</code>: <code>update()</code> computes
+      <code>fmtBits((Math.PI * rsPx * rsPx) / Math.LN2)</code> and renders it next to the
+      label &ldquo;Entropy S <i>(1px=&#8467;<sub>P</sub>)</i>&rdquo;, the joke
+      calibration disclosed in-line. It grows as \( r_s^2 \), i.e. as horizon area, and
+      because swallowing only ever adds mass (equation 7), the displayed entropy never
+      decreases: the second law, enforced by <code>onSwallow()</code>. When everything is
+      eaten, the HUD concedes <em>&ldquo;Heat death reached.&rdquo;</em>
+    </p>
+    <p data-lang="zh">
+      HUD 的熵行住在 <code>src/hud.js</code>:<code>update()</code> 计算
+      <code>fmtBits((Math.PI * rsPx * rsPx) / Math.LN2)</code>,渲染在标签
+      "Entropy S <i>(1px=&#8467;<sub>P</sub>)</i>"旁边,玩笑标定当场声明。
+      它按 \( r_s^2 \)、也就是按视界面积增长;又因为吞噬只会增加质量(方程 7),
+      显示的熵从不减少:热力学第二定律,由 <code>onSwallow()</code> 执法。
+      当一切都被吃光,HUD 认输:<em>"Heat death reached."(热寂已达)</em>
+    </p>
+  </div>
+  <div class="blk" data-devour>
+    <p class="see" data-lang="en"><b>On the page</b> &mdash; watch the HUD&rsquo;s entropy
+      row while you feed the hole: every paragraph becomes a few hundred more bits of
+      horizon, and the number only ever goes up.</p>
+    <p class="see" data-lang="zh"><b>你能看到</b> —— 喂黑洞时盯住 HUD 的熵行:
+      每个段落都化作几百比特新视界,而这个数字只涨不跌。</p>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-footer" data-devour>
+  <p data-lang="en">
+    The physics core (<code>src/physics.js</code>) is DOM-free and unit-tested in node:
+    energy conservation, circular-orbit stability at the ISCO, radial free-fall timing, and
+    perihelion precession are all checked against the exact expressions above.
+  </p>
+  <p data-lang="zh">
+    物理核心(<code>src/physics.js</code>)不依赖 DOM,并在 node 中通过单元测试:
+    能量守恒、ISCO 处圆轨道稳定性、径向自由落体计时、近日点进动,
+    全部对照上文的精确表达式检验。
+  </p>
+  <p data-lang="en">
+    Equation provenance: Schwarzschild (1916) for 1&ndash;5, 7, 10, 13; standard geodesic
+    deviation for 6; Berti, Cardoso &amp; Starinets&rsquo; QNM tables for 8; Bozza (2002)
+    for the strong-deflection limit in 9; Shakura &amp; Sunyaev (1973) for 11&ndash;12;
+    Bekenstein (1973) and Hawking (1975) for 15. Number 14 is ours, and we own it.
+  </p>
+  <p data-lang="zh">
+    方程出处:1–5、7、10、13 出自 Schwarzschild(1916);6 是标准测地偏离;
+    8 出自 Berti、Cardoso 与 Starinets 的 QNM 表;9 的强偏折极限出自 Bozza(2002);
+    11–12 出自 Shakura 与 Sunyaev(1973);15 出自 Bekenstein(1973)与 Hawking(1975)。
+    第 14 条是我们自己的,我们认账。
+  </p>
+  <p data-lang="en">&copy; 2026 Y. Xia &mdash; everything on this page eventually crosses the horizon.</p>
+  <p data-lang="zh">&copy; 2026 Y. Xia —— 本页所有内容终将落入视界。</p>
+</footer>
+
+</div>
+
+<script>
+/* Language toggle: EN default, persisted to localStorage('bh-lang'). */
+(function () {
+  'use strict';
+  var KEY = 'bh-lang';
+  var root = document.documentElement;
+  var btn = document.getElementById('lang-toggle');
+  function apply(lang) {
+    root.setAttribute('data-bh-lang', lang);
+    root.setAttribute('lang', lang === 'zh' ? 'zh-CN' : 'en');
+    /* Button shows the language you would switch TO. */
+    btn.textContent = lang === 'zh' ? 'EN' : '中文';
+    btn.setAttribute('aria-label', lang === 'zh' ? 'Switch to English' : '切换到中文');
+  }
+  apply(root.getAttribute('data-bh-lang') === 'zh' ? 'zh' : 'en');
+  btn.addEventListener('click', function () {
+    var next = root.getAttribute('data-bh-lang') === 'zh' ? 'en' : 'zh';
+    apply(next);
+    try { localStorage.setItem(KEY, next); } catch (e) { /* private mode etc. */ }
+  });
+})();
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  renderMathInElement(document.body, {
+    delimiters: [
+      { left: '$$', right: '$$', display: true },
+      { left: '\\(', right: '\\)', display: false }
+    ],
+    throwOnError: false
+  });
+});
+</script>
+
+<script>
+/* Figure 1 — effective potential V_eff(r) with adjustable L */
+(function () {
+  'use strict';
+  var canvas = document.getElementById('veff-canvas');
+  var slider = document.getElementById('veff-L');
+  var readout = document.getElementById('veff-readout');
+  var ctx = canvas.getContext('2d');
+  var M = 1, RS = 2;                       /* geometric units, r_s = 2M */
+  var R0 = 2, R1 = 30;                     /* r/M plot range */
+  var V0 = 0.88, V1 = 1.18;                /* V_eff plot range */
+  var PAD = { l: 60, r: 14, t: 16, b: 42 };
+  var C = { grid: '#1a2136', axis: '#2e3a5e', text: '#8b96b5', faint: '#5a6480',
+            curve: '#7fb0ff', warm: '#ffb26b', red: '#e0684e' };
+  var W = 0, H = 0;
+
+  function veff(r, L) {
+    var f = 1 - RS / r;
+    return Math.sqrt(Math.max(0, f * (1 + (L * L) / (r * r))));
+  }
+  function X(r) { return PAD.l + (r - R0) / (R1 - R0) * (W - PAD.l - PAD.r); }
+  function Y(v) { return H - PAD.b - (v - V0) / (V1 - V0) * (H - PAD.t - PAD.b); }
+
+  function setup() {
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = canvas.clientWidth; H = canvas.clientHeight;
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function axes() {
+    ctx.lineWidth = 1;
+    ctx.font = '11px ui-monospace, Menlo, monospace';
+    ctx.strokeStyle = C.grid; ctx.fillStyle = C.text;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    for (var r = 2; r <= R1; r += 4) {
+      ctx.beginPath(); ctx.moveTo(X(r), PAD.t); ctx.lineTo(X(r), H - PAD.b); ctx.stroke();
+      ctx.fillText(String(r), X(r), H - PAD.b + 6);
+    }
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    for (var i = 0; i <= 5; i++) {
+      var v = 0.90 + 0.05 * i;
+      ctx.beginPath(); ctx.moveTo(PAD.l, Y(v)); ctx.lineTo(W - PAD.r, Y(v)); ctx.stroke();
+      ctx.fillText(v.toFixed(2), PAD.l - 8, Y(v));
+    }
+    ctx.strokeStyle = C.axis;
+    ctx.strokeRect(PAD.l, PAD.t, W - PAD.l - PAD.r, H - PAD.t - PAD.b);
+    ctx.fillStyle = C.faint;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillText('r / M   (horizon at r = 2M)', PAD.l + (W - PAD.l - PAD.r) / 2, H - 4);
+    ctx.save();
+    ctx.translate(14, PAD.t + (H - PAD.t - PAD.b) / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.textBaseline = 'middle';
+    ctx.fillText('V_eff (per unit rest mass)', 0, 0);
+    ctx.restore();
+  }
+
+  function dot(r, v, color, label, side) {
+    var x = X(r), y = Y(v);
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = side > 0 ? 'top' : 'bottom';
+    ctx.fillText(label, x, y + side * 8);
+  }
+
+  function draw() {
+    setup();
+    var L = parseFloat(slider.value);
+    var sub = L < Math.sqrt(12);
+    readout.textContent = 'L = ' + L.toFixed(2) + ' M' + (sub ? '  (< √12 M)' : '');
+    ctx.clearRect(0, 0, W, H);
+    axes();
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(PAD.l, PAD.t, W - PAD.l - PAD.r, H - PAD.t - PAD.b);
+    ctx.clip();
+
+    ctx.strokeStyle = C.faint; ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(X(6), PAD.t); ctx.lineTo(X(6), H - PAD.b); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(PAD.l, Y(1)); ctx.lineTo(W - PAD.r, Y(1)); ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.strokeStyle = C.curve; ctx.lineWidth = 2;
+    ctx.beginPath();
+    var n = 420;
+    for (var i = 0; i <= n; i++) {
+      var r = R0 + (R1 - R0) * i / n;
+      var y = Y(veff(r, L));
+      if (i === 0) ctx.moveTo(X(r), y); else ctx.lineTo(X(r), y);
+    }
+    ctx.stroke();
+
+    ctx.font = '11px ui-monospace, Menlo, monospace';
+    if (!sub) {
+      var disc = Math.sqrt(Math.max(0, 1 - 12 * M * M / (L * L)));
+      var rU = (L * L / (2 * M)) * (1 - disc);
+      var rS = (L * L / (2 * M)) * (1 + disc);
+      dot(rU, veff(rU, L), C.warm, 'unstable', -1);
+      dot(rS, veff(rS, L), C.curve, 'stable', 1);
+    }
+    ctx.restore();
+
+    ctx.fillStyle = C.faint;
+    ctx.font = '11px ui-monospace, Menlo, monospace';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('ISCO r = 6M', X(6) + 6, PAD.t + 4);
+    ctx.fillText('E = 1 (escape threshold)', PAD.l + 8, Y(1) + 4);
+    if (sub) {
+      ctx.fillStyle = C.red;
+      ctx.fillText('L < √12 M: barrier gone — everything falls in', X(6) + 6, PAD.t + 20);
+    }
+  }
+
+  slider.addEventListener('input', draw);
+  window.addEventListener('resize', draw);
+  draw();
+})();
+</script>
+
+<script>
+/* Figure 2 — photon deflection angle alpha(b) */
+(function () {
+  'use strict';
+  var canvas = document.getElementById('defl-canvas');
+  var ctx = canvas.getContext('2d');
+  var BC = 3 * Math.sqrt(3) / 2;                                /* b_c in units of r_s */
+  var CST = Math.log(216 * (7 - 4 * Math.sqrt(3))) - Math.PI;   /* ~ -0.4002 */
+  var B0 = 2, B1 = 12, A0 = 0, A1 = 5;
+  var PAD = { l: 56, r: 14, t: 16, b: 42 };
+  var C = { grid: '#1a2136', axis: '#2e3a5e', text: '#8b96b5', faint: '#5a6480',
+            weak: '#7fb0ff', strong: '#ffb26b', shade: 'rgba(127,176,255,0.07)' };
+  var W = 0, H = 0;
+
+  function weak(b) { return 2 / b; }
+  function strong(b) { return -Math.log(b / BC - 1) + CST; }
+  function X(b) { return PAD.l + (b - B0) / (B1 - B0) * (W - PAD.l - PAD.r); }
+  function Y(a) { return H - PAD.b - (a - A0) / (A1 - A0) * (H - PAD.t - PAD.b); }
+
+  function setup() {
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = canvas.clientWidth; H = canvas.clientHeight;
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function curve(fn, ba, bb) {
+    var n = 500, started = false;
+    ctx.beginPath();
+    for (var i = 0; i <= n; i++) {
+      var b = ba + (bb - ba) * i / n;
+      var a = fn(b);
+      if (!isFinite(a)) continue;
+      var x = X(b), y = Y(Math.min(a, A1 + 2));
+      if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+
+  function draw() {
+    setup();
+    ctx.clearRect(0, 0, W, H);
+    ctx.lineWidth = 1;
+    ctx.font = '11px ui-monospace, Menlo, monospace';
+    ctx.strokeStyle = C.grid; ctx.fillStyle = C.text;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    for (var b = 2; b <= B1; b += 2) {
+      ctx.beginPath(); ctx.moveTo(X(b), PAD.t); ctx.lineTo(X(b), H - PAD.b); ctx.stroke();
+      ctx.fillText(String(b), X(b), H - PAD.b + 6);
+    }
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    for (var a = A0; a <= A1; a++) {
+      ctx.beginPath(); ctx.moveTo(PAD.l, Y(a)); ctx.lineTo(W - PAD.r, Y(a)); ctx.stroke();
+      ctx.fillText(String(a), PAD.l - 8, Y(a));
+    }
+    ctx.strokeStyle = C.axis;
+    ctx.strokeRect(PAD.l, PAD.t, W - PAD.l - PAD.r, H - PAD.t - PAD.b);
+    ctx.fillStyle = C.faint;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillText('impact parameter b / r_s', PAD.l + (W - PAD.l - PAD.r) / 2, H - 4);
+    ctx.save();
+    ctx.translate(14, PAD.t + (H - PAD.t - PAD.b) / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.textBaseline = 'middle';
+    ctx.fillText('deflection α (rad)', 0, 0);
+    ctx.restore();
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(PAD.l, PAD.t, W - PAD.l - PAD.r, H - PAD.t - PAD.b);
+    ctx.clip();
+
+    ctx.fillStyle = C.shade;
+    ctx.fillRect(X(B0), PAD.t, X(BC) - X(B0), H - PAD.t - PAD.b);
+
+    ctx.strokeStyle = C.faint; ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(X(BC), PAD.t); ctx.lineTo(X(BC), H - PAD.b); ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = C.weak; ctx.setLineDash([6, 5]);
+    curve(weak, B0 + 0.01, B1);
+    ctx.setLineDash([]);
+
+    ctx.strokeStyle = C.strong;
+    var bEnd = BC * (1 + Math.exp(CST));   /* where strong(b) crosses zero */
+    curve(strong, BC + 1e-4, Math.min(bEnd, B1));
+
+    ctx.save();
+    ctx.translate((X(B0) + X(BC)) / 2, PAD.t + (H - PAD.t - PAD.b) / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillStyle = C.text;
+    ctx.font = '11px ui-monospace, Menlo, monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('captured → shadow', 0, 0);
+    ctx.restore();
+    ctx.restore();
+
+    ctx.font = '11px ui-monospace, Menlo, monospace';
+    ctx.fillStyle = C.faint;
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('b_c = 2.598 r_s', X(BC) + 6, PAD.t + 4);
+
+    var lx = W - PAD.r - 200, ly = PAD.t + 18;
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = C.weak; ctx.setLineDash([6, 5]);
+    ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + 28, ly); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = C.text; ctx.textBaseline = 'middle';
+    ctx.fillText('weak field 2 r_s / b', lx + 36, ly);
+    ctx.strokeStyle = C.strong;
+    ctx.beginPath(); ctx.moveTo(lx, ly + 18); ctx.lineTo(lx + 28, ly + 18); ctx.stroke();
+    ctx.fillText('Bozza strong field', lx + 36, ly + 18);
+  }
+
+  window.addEventListener('resize', draw);
+  draw();
+})();
+</script>
+
+<script type="module">
+  import BlackHole from './blackhole.js?v=4';
+  const bh = BlackHole.init({
+    corner: 'bottom-right',
+    targets: '[data-devour]',
+    initialRs: 16,
+    maxRsFraction: 0.2,
+    cPx: 1600,
+    dragK: 2.0,
+    hud: true,
+  });
+  bh.activate(); // 进页即开:黑洞默认在线,🕳 仍可随时关掉
+</script>
+
+</body>
+</html>
