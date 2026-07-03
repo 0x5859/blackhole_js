@@ -229,13 +229,15 @@ export function hoverAccel(r, rs) {
 /**
  * 方程 8:铃宕。吞噬后视界显示半径的阻尼振荡偏移(px)。
  * ω = QNM.re·cPx/(M·TSCALE) rad/s,τ_d = M·TSCALE/(QNM.im·cPx) s,M = rsPx/2。
- * 频率 ∝ 1/M、衰减时间 ∝ M:黑洞越大,铃声越低沉、余音越长。
+ * 频率 ∝ 1/M、衰减时间 ∝ M:黑洞越大,铃声越低沉、余音更长。
+ * 初相取正弦:激发是一次速度冲击,位移从零起振 —— t=0 时偏移为 0,
+ * 视界显示半径在激发瞬间连续(余弦初相会让半径当帧跳增一个振幅)。
  */
 export function ringdownOffset(tSec, rsPx, cPx, amp) {
-  // rsPx→0 时 ω→∞,cos(∞·0) 会得 NaN;黑洞尚未长出时铃宕无意义,直接 0
+  // rsPx→0 时 ω→∞,sin(∞·0) 会得 NaN;黑洞尚未长出时铃宕无意义,直接 0
   if (tSec < 0 || amp === 0 || rsPx < 1) return 0;
   const M = rsPx / 2;
   const omega = (QNM.re * cPx) / (M * RINGDOWN_TSCALE);
   const tauD = (M * RINGDOWN_TSCALE) / (QNM.im * cPx);
-  return amp * Math.exp(-tSec / tauD) * Math.cos(omega * tSec);
+  return amp * Math.exp(-tSec / tauD) * Math.sin(omega * tSec);
 }

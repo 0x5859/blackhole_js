@@ -1084,19 +1084,25 @@ code {
       In <code>blackhole.js</code>, <code>calibrate()</code> measures
       <code>getBoundingClientRect()</code> areas of all targets and sets
       <code>kM = (Mmax - M) / sum</code>, with <code>Mmax = rsMax()/2</code> and
-      <code>rsMax = maxRsFraction * min(vw, vh)</code>. The <code>onSwallow(area)</code>
-      callback then applies equation 7: <code>M = Math.min(Mmax, M + kM * area)</code>,
-      bumps the swallow counter, and triggers the flare and ringdown. The rendered radius
-      <code>rsShown</code> relaxes toward \( 2M \) with a 0.25&nbsp;s time constant, so
-      growth reads as a swell rather than a pop.
+      <code>rsMax = maxRsFraction * min(vw, vh)</code>. Equation 7 is then applied as a
+      stream: each grid vertex of a falling element carries an equal share of its area,
+      and the moment that vertex freezes onto the horizon the <code>onAccrete(area)</code>
+      callback books it &mdash; <code>M = Math.min(Mmax, M + kM * area)</code> &mdash; so
+      the hole grows <em>while</em> the block is going down, not in one gulp at the end.
+      <code>onSwallow()</code> merely bumps the counter and rings the bell. The rendered
+      radius <code>rsShown</code> relaxes toward \( 2M \) with a 0.25&nbsp;s time constant,
+      so growth reads as a swell rather than a pop.
     </p>
     <p data-lang="zh">
       在 <code>blackhole.js</code> 里,<code>calibrate()</code> 用
       <code>getBoundingClientRect()</code> 量出所有目标的面积并设定
       <code>kM = (Mmax - M) / sum</code>,其中 <code>Mmax = rsMax()/2</code>、
-      <code>rsMax = maxRsFraction * min(vw, vh)</code>。随后 <code>onSwallow(area)</code>
-      回调施行方程 7:<code>M = Math.min(Mmax, M + kM * area)</code>,给吞噬计数加一,
-      并触发耀发与铃宕。展示半径 <code>rsShown</code> 以 0.25&nbsp;s 的时间常数向
+      <code>rsMax = maxRsFraction * min(vw, vh)</code>。方程 7 以流的方式施行:
+      坠落元素的每个格点均分它的面积,哪个格点冻结在视界上,
+      <code>onAccrete(area)</code> 回调就当刻入账那一份 ——
+      <code>M = Math.min(Mmax, M + kM * area)</code> —— 黑洞在块<em>坠入的途中</em>长大,
+      而不是最后一口吞成。<code>onSwallow()</code> 只负责计数与敲钟。
+      展示半径 <code>rsShown</code> 以 0.25&nbsp;s 的时间常数向
       \( 2M \) 松弛,生长读起来是一次鼓胀,而不是一声爆开。
     </p>
   </div>
@@ -1165,24 +1171,27 @@ code {
     <p data-lang="en">
       The mode constant is <code>QNM = { re: 0.37367, im: 0.08896 }</code> in
       <code>src/physics.js</code>. <code>ringdownOffset(tSec, rsPx, cPx, amp)</code> builds
-      the damped cosine with <code>omega = QNM.re * cPx / (M * RINGDOWN_TSCALE)</code> and
+      the damped sine with <code>omega = QNM.re * cPx / (M * RINGDOWN_TSCALE)</code> and
       <code>tauD = M * RINGDOWN_TSCALE / (QNM.im * cPx)</code>: the \( 1/M \) and
-      \( M \) scalings verbatim, stretched by <code>RINGDOWN_TSCALE = 20</code>. The main
-      loop in <code>blackhole.js</code> adds this offset to the displayed radius
-      <code>rsShown</code> each frame; <code>onSwallow()</code> sets the amplitude
-      (larger for bigger meals) and even the hole&rsquo;s birth animation reuses it, growing
-      from zero with a ring.
+      \( M \) scalings verbatim, stretched by <code>RINGDOWN_TSCALE = 20</code>. The sine
+      phase matters: the excitation is a velocity kick, so the displacement starts at zero
+      and the rim never jumps on the swallow frame. Each meal appends one such mode and the
+      main loop in <code>blackhole.js</code> adds their <em>linear superposition</em> to the
+      displayed radius <code>rsShown</code> &mdash; perturbation theory taken at its word
+      &mdash; with amplitude set by the meal&rsquo;s mass. Even the hole&rsquo;s birth
+      animation reuses it, growing from zero with a ring.
     </p>
     <p data-lang="zh">
       模式常数是 <code>src/physics.js</code> 里的
       <code>QNM = { re: 0.37367, im: 0.08896 }</code>。
       <code>ringdownOffset(tSec, rsPx, cPx, amp)</code> 用
       <code>omega = QNM.re * cPx / (M * RINGDOWN_TSCALE)</code> 与
-      <code>tauD = M * RINGDOWN_TSCALE / (QNM.im * cPx)</code> 搭出阻尼余弦:
+      <code>tauD = M * RINGDOWN_TSCALE / (QNM.im * cPx)</code> 搭出阻尼正弦:
       \( 1/M \) 与 \( M \) 两条标度原样保留,再被 <code>RINGDOWN_TSCALE = 20</code> 拉长。
-      <code>blackhole.js</code> 的主循环每帧把这个偏移加到展示半径 <code>rsShown</code> 上;
-      <code>onSwallow()</code> 设定振幅(饭越大,晃得越大),连黑洞的出生动画也复用它:
-      从零长起,带着一声铃。
+      正弦的初相有讲究:激发是一次速度冲击,位移从零起振,吞噬那一帧视界边缘不会跳变。
+      每顿饭追加一个这样的模式,<code>blackhole.js</code> 的主循环把它们的<em>线性叠加</em>
+      加到展示半径 <code>rsShown</code> 上 —— 把微扰论的字面意思当真 ——
+      振幅由这顿饭的质量决定。连黑洞的出生动画也复用它:从零长起,带着一声铃。
     </p>
   </div>
   <div class="blk" data-devour>
@@ -1525,46 +1534,59 @@ code {
   </div>
   <div class="blk" data-devour>
     <p data-lang="en">
-      The demo honors the spirit at page scale: each swallowed element is a parcel of mass,
-      a spike in \( \dot m \), and its arrival buys a pulse of disk luminosity proportional to the
-      parcel&rsquo;s mass: bigger blocks, brighter flares. The pulse then relaxes
+      The demo honors the spirit at page scale &mdash; and takes \( \dot m \) literally.
+      As an element streams in, every grid vertex that freezes onto the horizon is a parcel
+      of mass arriving, and each parcel buys its share of disk luminosity the moment it
+      lands. The disk brightens <em>while</em> the meal is in progress &mdash; bigger
+      blocks, brighter flares &mdash; and once the last parcel is in, the pulse relaxes
       exponentially, the way a real accretion transient decays as the extra matter drains
       through the disk.
     </p>
     <p data-lang="zh">
-      演示在页面尺度上致敬这套精神:每个被吞的元素都是一小包质量,是 \( \dot m \) 上的一次尖峰,
-      它的到账换来一脉冲盘面光度,与包裹的质量成正比:块越大,耀发越亮。
-      随后脉冲按指数松弛,就像真实的吸积暂现源那样,随多余物质排空盘面而衰减。
+      演示在页面尺度上致敬这套精神 —— 而且把 \( \dot m \) 当真:元素流入时,
+      每个冻结在视界上的格点都是一小包到账的质量,每包质量落地的当刻就换来它那份盘面光度。
+      盘在进食<em>途中</em>就亮起来 —— 块越大,耀发越亮 —— 最后一包入账之后,
+      脉冲按指数松弛,就像真实的吸积暂现源那样,随多余物质排空盘面而衰减。
     </p>
   </div>
   <div class="code-box" data-devour>
     <span class="box-title"><span data-lang="en">In the code</span><span data-lang="zh">代码里</span></span>
     <p data-lang="en">
       The efficiency is exported as <code>ETA_ISCO = 1 - Math.sqrt(8/9)</code> in
-      <code>src/physics.js</code>. In <code>blackhole.js</code>, <code>onSwallow(area)</code>
-      kicks the flare state: <code>flare = min(1, flare + 0.35 + area/90000)</code>
-      (amplitude growing with the swallowed mass), and the frame loop decays it with
-      <code>flare *= exp(-dt/0.8)</code>. The renderer receives it as the uniform
+      <code>src/physics.js</code>. In <code>blackhole.js</code>, every accreted parcel feeds
+      the flare through <code>onAccrete(area, total)</code>:
+      <code>flare = min(1, flare + 0.35*area/total + area/90000)</code> &mdash; summed over
+      a whole element that is exactly the old lump <code>0.35 + A/90000</code>, but paid out
+      with the mass flux instead of all at once. The frame loop drains the reservoir with
+      <code>flare *= exp(-dt/0.8)</code>, and a 0.12&nbsp;s low-pass (the disk&rsquo;s
+      response time) smooths what the shader sees, so even a rigid fallback landing in one
+      frame cannot strobe. The renderer receives the result as the uniform
       <code>u_flare</code>: <code>diskEmission()</code> multiplies its brightness by
       <code>1.0 + 3.0*u_flare</code> and the ambient glow scales with it too. The
       photon ring, being made of ray-traced disk light, surges on its own.
     </p>
     <p data-lang="zh">
       效率以 <code>ETA_ISCO = 1 - Math.sqrt(8/9)</code> 导出在 <code>src/physics.js</code>。
-      在 <code>blackhole.js</code> 里,<code>onSwallow(area)</code> 踢一脚耀发状态:
-      <code>flare = min(1, flare + 0.35 + area/90000)</code>(振幅随吞下的质量增长),
-      帧循环再用 <code>flare *= exp(-dt/0.8)</code> 让它衰减。渲染器以 uniform
+      在 <code>blackhole.js</code> 里,每包入账的质量都经
+      <code>onAccrete(area, total)</code> 喂给耀发:
+      <code>flare = min(1, flare + 0.35*area/total + area/90000)</code> ——
+      对整个元素求和,恰好等于旧的一次性入账 <code>0.35 + A/90000</code>,
+      只是改成随质量流分期支付。帧循环用 <code>flare *= exp(-dt/0.8)</code> 排空储能,
+      再过一道 0.12&nbsp;s 的低通(盘的响应时间)才交给着色器,
+      即便刚体降级在一帧内整块落账,也闪不起来。渲染器以 uniform
       <code>u_flare</code> 接收:<code>diskEmission()</code> 把亮度乘上
       <code>1.0 + 3.0*u_flare</code>,环境辉光也随之缩放。光子环由光线追踪的盘光构成,
       于是自己就会跟着涌亮。
     </p>
   </div>
   <div class="blk" data-devour>
-    <p class="see" data-lang="en"><b>On the page</b> &mdash; the instant a block dies, the
-      disk and ring surge bright and relax over a second or so; sacrifice a big card and the
-      flash noticeably outclasses a nibbled list item.</p>
-    <p class="see" data-lang="zh"><b>你能看到</b> —— 块死去的那一瞬,盘和环猛地增亮,
-      又在一秒上下松弛回去;献祭一大块内容,闪光会明显盖过啃掉的一小行。</p>
+    <p class="see" data-lang="en"><b>On the page</b> &mdash; as a block streams in, the disk
+      and ring brighten with the mass flux, peak around the last mouthful, and relax over a
+      second or so; sacrifice a big card and the surge noticeably outclasses a nibbled list
+      item.</p>
+    <p class="see" data-lang="zh"><b>你能看到</b> —— 块流入的一路上,盘和环随质量流渐次增亮,
+      在最后一口前后到达峰值,再在一秒上下松弛回去;献祭一大块内容,
+      涌亮会明显盖过啃掉的一小行。</p>
   </div>
 </section>
 
@@ -1777,16 +1799,17 @@ code {
       <code>fmtBits((Math.PI * rsPx * rsPx) / Math.LN2)</code> and renders it next to the
       label &ldquo;Entropy S <i>(1px=&#8467;<sub>P</sub>)</i>&rdquo;, the joke
       calibration disclosed in-line. It grows as \( r_s^2 \), i.e. as horizon area, and
-      because swallowing only ever adds mass (equation 7), the displayed entropy never
-      decreases: the second law, enforced by <code>onSwallow()</code>. When everything is
-      eaten, the HUD concedes <em>&ldquo;Heat death reached.&rdquo;</em>
+      because accretion only ever adds mass (equation 7), the displayed entropy never
+      decreases: the second law, enforced by <code>onAccrete()</code>, one frozen vertex at
+      a time. When everything is eaten, the HUD concedes
+      <em>&ldquo;Heat death reached.&rdquo;</em>
     </p>
     <p data-lang="zh">
       HUD 的熵行住在 <code>src/hud.js</code>:<code>update()</code> 计算
       <code>fmtBits((Math.PI * rsPx * rsPx) / Math.LN2)</code>,渲染在标签
       "Entropy S <i>(1px=&#8467;<sub>P</sub>)</i>"旁边,玩笑标定当场声明。
-      它按 \( r_s^2 \)、也就是按视界面积增长;又因为吞噬只会增加质量(方程 7),
-      显示的熵从不减少:热力学第二定律,由 <code>onSwallow()</code> 执法。
+      它按 \( r_s^2 \)、也就是按视界面积增长;又因为吸积只会增加质量(方程 7),
+      显示的熵从不减少:热力学第二定律,由 <code>onAccrete()</code> 逐格点执法。
       当一切都被吃光,HUD 认输:<em>"Heat death reached."(热寂已达)</em>
     </p>
   </div>
@@ -2110,7 +2133,7 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 <script type="module">
-  import BlackHole from './blackhole.js?v=5';
+  import BlackHole from './blackhole.js?v=6';
   const bh = BlackHole.init({
     corner: 'bottom-right',
     targets: '[data-devour]',
@@ -2121,6 +2144,7 @@ document.addEventListener('DOMContentLoaded', function () {
     hud: true,
   });
   bh.activate(); // 进页即开:黑洞默认在线,🕳 仍可随时关掉
+  window.__blackhole = bh; // 暴露实例:控制台把玩 / 自动化测试驱动同一实例
 </script>
 
 </body>

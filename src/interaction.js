@@ -21,8 +21,8 @@
  * → { activate, deactivate, tick(dtSec), fallingCount, hasWork, destroy }
  */
 
-import { makeBody, stepBody, screenState, hoverAccel } from './physics.js?v=5';
-import { snapshotElement } from './snapshot.js?v=5';
+import { makeBody, stepBody, screenState, hoverAccel } from './physics.js?v=6';
+import { snapshotElement } from './snapshot.js?v=6';
 
 const PULL_GAIN = 900;  // 拖拽中悬停力→位移偏置的视觉增益
 const PULL_MAX = 26;    // 偏置上限 px
@@ -240,7 +240,7 @@ export function createInteraction({ targetsSelector, getHole, onAccrete, onSwall
     const rest = w * h - item.accreted;
     if (rest > 0) {
       item.accreted = w * h;
-      onAccrete?.(rest);
+      onAccrete?.(rest, w * h);
     }
     onSwallow(w * h, el);
   }
@@ -287,8 +287,9 @@ export function createInteraction({ targetsSelector, getHole, onAccrete, onSwall
             if (!stepBody(vt.body, env, dtSec)) {
               vt.frozen = true;
               // 渐进吸积:这个格点冻结在视界上,它那份质量此刻入账
+              // (第二参数 = 元素总面积,供调用方按占比分摊每元素常数项)
               it.accreted += it.dA;
-              onAccrete?.(it.dA);
+              onAccrete?.(it.dA, it.w * it.h);
             }
             const s = screenState(vt.body, hole);
             vt.x = s.x; vt.y = s.y; vt.z = s.redshift;
@@ -342,15 +343,20 @@ export function createInteraction({ targetsSelector, getHole, onAccrete, onSwall
   function activate() {
     if (active) return;
     active = true;
+    collectTargets();
+    document.addEventListener('pointerdown', onDocDown);
+    snapshotRects();
+    pastTimer = setInterval(snapshotRects, 250);
+  }
+
+  /** 采集可吞目标并打上 .bh-devour(activate 与 restoreAll 复用)*/
+  function collectTargets() {
     targets = [...document.querySelectorAll(targetsSelector)];
     if (!targets.length) {
       console.warn(`[blackhole] selector "${targetsSelector}" matched nothing; falling back to default content blocks`);
       targets = [...document.querySelectorAll('main h1, main h2, main p, main img, main li, main pre')];
     }
     for (const el of targets) el.classList.add('bh-devour');
-    document.addEventListener('pointerdown', onDocDown);
-    snapshotRects();
-    pastTimer = setInterval(snapshotRects, 250);
   }
 
   function deactivate() {
@@ -398,6 +404,12 @@ export function createInteraction({ targetsSelector, getHole, onAccrete, onSwall
       restoreEl(c.el, c.prevStyle);
     }
     consumed.length = 0;
+    // 重新登记目标:若元素被吞后经历过 deactivate→activate(重采集时不在
+    // DOM),此刻复原的它既不在 targets 也没有 .bh-devour,会永远抓不住
+    if (active) {
+      collectTargets();
+      snapshotRects();
+    }
   }
 
   return {
