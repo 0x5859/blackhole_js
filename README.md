@@ -67,10 +67,11 @@ Artistic license (honestly labeled, see the honesty box on the page): ~168-step 
 After editing module files, hard-refresh the page (Cmd/Ctrl+Shift+R). Simple static dev servers (`uv run python -m http.server`) let the browser heuristically cache `src/*.js`, and a half-updated module graph (fresh entry + stale internals, or vice versa) fails in silent and confusing ways. The entry pins its internal imports with a `?v=N` query (bump it when releasing) and `init()` logs a loud console warning if it detects a stale mix.
 
 ```bash
-node --test tests/   # 10 physics unit tests: energy conservation (<1e-9), circular orbits,
-                     # turning-point stability over 20 orbits, ISCO instability, horizon freeze,
-                     # perihelion precession, geodesic deviation (tides), Newtonian limit,
-                     # superluminal clamp, screen mapping
+node --test tests/physics.test.mjs
+# 10 physics unit tests: energy conservation (<1e-9), circular orbits,
+# turning-point stability over 20 orbits, ISCO instability, horizon freeze,
+# perihelion precession, geodesic deviation (tides), Newtonian limit,
+# superluminal clamp, screen mapping
 ```
 
 Module layout:

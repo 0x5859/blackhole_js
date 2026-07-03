@@ -11,13 +11,18 @@
  *   3. 快照失败 / 2D 降级 → 回退刚体路径(整体 transform + 颜色滤镜,无 blur)。
  * 全部顶点冻结于视界(坐标时冻结)→ 吞噬:移除元素、占位符折叠、onSwallow。
  *
- * createInteraction({ targetsSelector, getHole, onSwallow, renderer })
+ * 质量记账是渐进式的(onAccrete):元素的质量按格点均分,哪个格点冻结在
+ * 视界上,哪一份质量就入账 —— 黑洞随着物体逐份流入而逐渐长大,而不是在
+ * 吞噬瞬间跳变;吞噬时刻补齐余量,保证总质量与元素面积精确相等。
+ * onSwallow 只负责事件本身(计数、耀发、铃宕、占位符)。
+ *
+ * createInteraction({ targetsSelector, getHole, onAccrete, onSwallow, renderer })
  *   getHole() => { cx, cy, rs, cPx, dragK }
  * → { activate, deactivate, tick(dtSec), fallingCount, hasWork, destroy }
  */
 
-import { makeBody, stepBody, screenState, hoverAccel } from './physics.js?v=4';
-import { snapshotElement } from './snapshot.js?v=4';
+import { makeBody, stepBody, screenState, hoverAccel } from './physics.js?v=5';
+import { snapshotElement } from './snapshot.js?v=5';
 
 const PULL_GAIN = 900;  // 拖拽中悬停力→位移偏置的视觉增益
 const PULL_MAX = 26;    // 偏置上限 px
@@ -27,7 +32,7 @@ const smooth = (z) => {
   return s * s * (3 - 2 * s);
 };
 
-export function createInteraction({ targetsSelector, getHole, onSwallow, renderer }) {
+export function createInteraction({ targetsSelector, getHole, onAccrete, onSwallow, renderer }) {
   let active = false;
   let targets = [];
   const falling = []; // item 见 releaseItem()
@@ -176,6 +181,8 @@ export function createInteraction({ targetsSelector, getHole, onSwallow, rendere
       mode: 'rigid', el, ghost, prevStyle: d.prevStyle, w, h, rot: 0, done: false,
       center: mkAt(rx + w / 2, ry + h / 2),
       verts, nx, ny, gx, gy,
+      accreted: 0,                      // 已入账质量(px² 面积计)
+      dA: (w * h) / verts.length,       // 每个格点携带的质量份额
       mesh: null,
       pos: new Float32Array(nx * ny * 2),
       fx: new Float32Array(nx * ny * 2),
@@ -228,6 +235,13 @@ export function createInteraction({ targetsSelector, getHole, onSwallow, rendere
     }
     el.remove();
     pendingGhosts.push(ghost); // 折叠推迟到 flushGhosts(静默时)
+    // 补齐未入账的质量余量(刚体路径 = 全额;网格路径 ≈ 浮点残差;
+    // deactivate 提前吞噬 = 剩余部分),保证总质量精确等于元素面积
+    const rest = w * h - item.accreted;
+    if (rest > 0) {
+      item.accreted = w * h;
+      onAccrete?.(rest);
+    }
     onSwallow(w * h, el);
   }
 
@@ -270,7 +284,12 @@ export function createInteraction({ targetsSelector, getHole, onSwallow, rendere
         for (let k = 0; k < it.verts.length; k++) {
           const vt = it.verts[k];
           if (!vt.frozen) {
-            if (!stepBody(vt.body, env, dtSec)) vt.frozen = true;
+            if (!stepBody(vt.body, env, dtSec)) {
+              vt.frozen = true;
+              // 渐进吸积:这个格点冻结在视界上,它那份质量此刻入账
+              it.accreted += it.dA;
+              onAccrete?.(it.dA);
+            }
             const s = screenState(vt.body, hole);
             vt.x = s.x; vt.y = s.y; vt.z = s.redshift;
           }

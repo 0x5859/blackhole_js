@@ -22,10 +22,10 @@
 
 // 内部依赖带版本参数:防止浏览器 HTTP 缓存把新旧模块混搭
 // (入口新、依赖旧的"半更新"模块图会产生各种静默怪象;改版时同步递增 v)
-import { ringdownOffset } from './src/physics.js?v=4';
-import { createRenderer } from './src/renderer.js?v=4';
-import { createInteraction } from './src/interaction.js?v=4';
-import { createHud } from './src/hud.js?v=4';
+import { ringdownOffset } from './src/physics.js?v=5';
+import { createRenderer } from './src/renderer.js?v=5';
+import { createInteraction } from './src/interaction.js?v=5';
+import { createHud } from './src/hud.js?v=5';
 
 const DEFAULTS = {
   corner: 'bottom-right',
@@ -42,7 +42,7 @@ function injectCss() {
   if (document.querySelector('link[data-blackhole-css]')) return;
   const link = document.createElement('link');
   link.rel = 'stylesheet';
-  link.href = new URL('./blackhole.css?v=4', import.meta.url).href;
+  link.href = new URL('./blackhole.css?v=5', import.meta.url).href;
   link.setAttribute('data-blackhole-css', '');
   document.head.appendChild(link);
 }
@@ -84,17 +84,25 @@ function init(opts = {}) {
 
   const getHole = () => ({ cx: center.x, cy: center.y, rs: rs(), cPx: cfg.cPx, dragK: cfg.dragK });
 
+  let hudDirty = false;
+
   const interaction = createInteraction({
     targetsSelector: cfg.targets,
     getHole,
     renderer,
-    onSwallow(area) {
+    // 渐进吸积:元素的质量按格点均分,格点冻结在视界上时逐份入账,
+    // 黑洞随物体流入而渐进长大(方程 7 的 M += m 以流的方式发生)
+    onAccrete(area) {
       M = Math.min(Mmax, M + kM * area);
+      hudDirty = true;
+    },
+    // 吞噬事件:一个元素完整落入 —— 计数、耀发、铃宕(质量已在 onAccrete 入账)
+    onSwallow(area) {
       swallowed += 1;
       flare = Math.min(1, flare + 0.35 + area / 90000);
       simTLastSwallow = simT;
       ringAmp = REDUCED ? 0 : Math.min(0.3 * rs(), 4 + area / 4000);
-      updateHud();
+      hudDirty = true;
     },
   });
 
@@ -131,6 +139,12 @@ function init(opts = {}) {
     simT += dt;
 
     interaction.tick(dt);
+
+    // 渐进吸积期间 HUD 每帧只刷一次(脏标记),避免逐格点重复刷
+    if (hudDirty) {
+      hudDirty = false;
+      updateHud();
+    }
 
     // 展示半径:生长动画(时间常数 0.25s)+ 铃宕(方程 8)
     const grow = 1 - Math.exp(-dt / 0.25);
