@@ -25,10 +25,10 @@
 
 // 内部依赖带版本参数:防止浏览器 HTTP 缓存把新旧模块混搭
 // (入口新、依赖旧的"半更新"模块图会产生各种静默怪象;改版时同步递增 v)
-import { ringdownOffset, QNM, RINGDOWN_TSCALE } from './src/physics.js?v=6';
-import { createRenderer } from './src/renderer.js?v=6';
-import { createInteraction } from './src/interaction.js?v=6';
-import { createHud } from './src/hud.js?v=6';
+import { ringdownOffset, QNM, RINGDOWN_TSCALE } from './src/physics.js?v=7';
+import { createRenderer } from './src/renderer.js?v=7';
+import { createInteraction } from './src/interaction.js?v=7';
+import { createHud } from './src/hud.js?v=7';
 
 const DEFAULTS = {
   corner: 'bottom-right',
@@ -45,7 +45,7 @@ function injectCss() {
   if (document.querySelector('link[data-blackhole-css]')) return;
   const link = document.createElement('link');
   link.rel = 'stylesheet';
-  link.href = new URL('./blackhole.css?v=6', import.meta.url).href;
+  link.href = new URL('./blackhole.css?v=7', import.meta.url).href;
   link.setAttribute('data-blackhole-css', '');
   document.head.appendChild(link);
 }
@@ -128,7 +128,12 @@ function init(opts = {}) {
     // 吞噬事件:一个元素完整落入 —— 计数与铃宕(质量、耀发已流式入账)
     onSwallow(area) {
       swallowed += 1;
-      exciteRing(Math.min(0.3 * rs(), 4 + area / 4000));
+      // 铃宕振幅 ∝ 这顿饭带来的视界增量 Δr_s = 2·k_m·面积:线性微扰里
+      // 视界形变 ∝ m/M,而 (m/M)·r_s 恰好就是 Δr_s —— 钟响正比于敲击。
+      // 旧振幅可达视界的三成(是整顿饭增长的数倍),吞噬完成的一瞬看似
+      // 体积暴涨;现在摆幅永远小于它所装饰的增长本身,大餐再设 8% 上限
+      const drs = 2 * kM * area;
+      exciteRing(Math.min(0.9 * drs, 0.08 * rs()));
       hudDirty = true;
     },
   });

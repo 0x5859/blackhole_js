@@ -1178,8 +1178,11 @@ code {
       and the rim never jumps on the swallow frame. Each meal appends one such mode and the
       main loop in <code>blackhole.js</code> adds their <em>linear superposition</em> to the
       displayed radius <code>rsShown</code> &mdash; perturbation theory taken at its word
-      &mdash; with amplitude set by the meal&rsquo;s mass. Even the hole&rsquo;s birth
-      animation reuses it, growing from zero with a ring.
+      &mdash; with amplitude proportional to the horizon growth that very meal caused
+      (\( m/M \) in disguise, exactly the scale linear perturbation theory assigns): the
+      bell rings in proportion to how hard it was struck, and the wobble never outweighs
+      the growth it decorates. Even the hole&rsquo;s birth animation reuses it, growing
+      from zero with a ring.
     </p>
     <p data-lang="zh">
       模式常数是 <code>src/physics.js</code> 里的
@@ -1191,7 +1194,9 @@ code {
       正弦的初相有讲究:激发是一次速度冲击,位移从零起振,吞噬那一帧视界边缘不会跳变。
       每顿饭追加一个这样的模式,<code>blackhole.js</code> 的主循环把它们的<em>线性叠加</em>
       加到展示半径 <code>rsShown</code> 上 —— 把微扰论的字面意思当真 ——
-      振幅由这顿饭的质量决定。连黑洞的出生动画也复用它:从零长起,带着一声铃。
+      振幅正比于这顿饭本身带来的视界增量(伪装成像素的 \( m/M \),恰是线性微扰论
+      规定的量级):钟响的响度正比于敲击的力度,摆动永远不会盖过它所装饰的生长。
+      连黑洞的出生动画也复用它:从零长起,带着一声铃。
     </p>
   </div>
   <div class="blk" data-devour>
@@ -2133,7 +2138,7 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 <script type="module">
-  import BlackHole from './blackhole.js?v=6';
+  import BlackHole from './blackhole.js?v=7';
   const bh = BlackHole.init({
     corner: 'bottom-right',
     targets: '[data-devour]',

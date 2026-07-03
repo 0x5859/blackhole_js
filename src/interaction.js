@@ -21,8 +21,8 @@
  * → { activate, deactivate, tick(dtSec), fallingCount, hasWork, destroy }
  */
 
-import { makeBody, stepBody, screenState, hoverAccel } from './physics.js?v=6';
-import { snapshotElement } from './snapshot.js?v=6';
+import { makeBody, stepBody, screenState, hoverAccel } from './physics.js?v=7';
+import { snapshotElement } from './snapshot.js?v=7';
 
 const PULL_GAIN = 900;  // 拖拽中悬停力→位移偏置的视觉增益
 const PULL_MAX = 26;    // 偏置上限 px
